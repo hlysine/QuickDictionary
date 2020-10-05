@@ -1,0 +1,78 @@
+﻿<Window
+    x:Class="QuickDictionary.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:local="clr-namespace:QuickDictionary"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    xmlns:cefSharp="clr-namespace:CefSharp.Wpf;assembly=CefSharp.Wpf"
+    TextElement.Foreground="{DynamicResource MaterialDesignBody}"
+    TextElement.FontWeight="Regular"
+    TextElement.FontSize="13"
+    TextOptions.TextFormattingMode="Ideal"
+    TextOptions.TextRenderingMode="Auto"
+    Background="{DynamicResource MaterialDesignPaper}"
+    FontFamily="{DynamicResource MaterialDesignFont}"
+    mc:Ignorable="d"
+    Title="Quick Dictionary"
+    Height="450"
+    Width="800"
+    DataContext="{Binding RelativeSource={RelativeSource Self}}"
+   SourceInitialized="Window_SourceInitialized"
+    Topmost="True">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition
+                Height="Auto" />
+            <RowDefinition
+                Height="*" />
+        </Grid.RowDefinitions>
+        <Grid
+            Margin="5">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition
+                    Width="*" />
+                <ColumnDefinition
+                    Width="Auto" />
+                <ColumnDefinition
+                    Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBox
+                Name="txtWord"
+                Margin="5"
+                Style="{StaticResource MaterialDesignOutlinedTextFieldTextBox}"
+                materialDesign:HintAssist.Hint="Word"
+                PreviewKeyUp="txtWord_PreviewKeyUp"/>
+            <CheckBox
+                Name="checkPause"
+                Margin="5 0 0 0"
+                Style="{StaticResource MaterialDesignCheckBox}" 
+                Grid.Column="1">
+                Pause
+            </CheckBox>
+            <ListBox
+                x:Name="listDictionaries"
+                Margin="5 0 0 0"
+                Grid.Column="2"
+                SelectionMode="Extended"
+                Style="{StaticResource MaterialDesignToolToggleFlatListBox}"
+                SelectionChanged="listDictionaries_SelectionChanged">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <materialDesign:Badged
+                            Badge="{Binding PrecedenceString}">
+                            <materialDesign:PackIcon
+                                Kind="{Binding Icon}" />
+                        </materialDesign:Badged>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </Grid>
+        <cefSharp:ChromiumWebBrowser
+            Name="browser"
+            Grid.Row="1"
+            VerticalAlignment="Stretch"
+            HorizontalAlignment="Stretch" />
+    </Grid>
+</Window>
