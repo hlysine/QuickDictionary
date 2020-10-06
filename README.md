@@ -6,4 +6,4 @@
  
  ## Downloads
  
- Head to Actions to download an auto-compiled binary
+[Releases page](https://github.com/Henry-YSLin/QuickDictionary/releases)
