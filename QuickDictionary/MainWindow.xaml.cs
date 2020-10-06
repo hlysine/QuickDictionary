@@ -49,6 +49,8 @@ namespace QuickDictionary
 
             dictionaries.Add(Dictionary.CambridgeCE);
             dictionaries.Add(Dictionary.MedicalDictionary);
+            dictionaries.Add(Dictionary.OxfordLearnersDict);
+            dictionaries.Add(Dictionary.DictionaryCom);
             dictionaries.Add(Dictionary.GoogleDefinitions);
             listDictionaries.ItemsSource = dictionaries;
             listDictionaries.SelectAll();
@@ -241,7 +243,8 @@ namespace QuickDictionary
                         var task = dict.ValidateQuery(dict.Url.Replace("%s", WebUtility.UrlEncode(word)));
                         validations.Add(task);
                     }
-                    await Task.WhenAny(validations.ToArray());
+                    if (validations.Count > 0)
+                        await Task.WhenAny(validations.ToArray());
                     for (int i = 0; i < validations.Count; i++)
                     {
                         await Task.WhenAny(validations[i]);
@@ -291,6 +294,16 @@ namespace QuickDictionary
                 if (block) Console.WriteLine("BLOCKED: " + request.Url);
                 return block;
             }
+        }
+
+        private void ScrollViewer_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
+        {
+            if (e.Delta < 0)
+                scrollToolbar.LineRight();
+            else
+                scrollToolbar.LineLeft();
+
+            e.Handled = true;
         }
     }
 
@@ -351,7 +364,7 @@ namespace QuickDictionary
             {
                 return !(await Helper.GetFinalRedirectAsync(url)).Contains("spellcheck");
             },
-            Icon = PackIconKind.Dictionary,
+            Icon = PackIconKind.LetterCBox,
             Name = "Cambridge English-Chinese Dictionary",
         };
 
@@ -374,6 +387,28 @@ namespace QuickDictionary
             },
             Icon = PackIconKind.MedicalBag,
             Name = "Merriam-Webster Medical Dictionary",
+        };
+
+        public static Dictionary OxfordLearnersDict = new Dictionary()
+        {
+            Url = "https://www.oxfordlearnersdictionaries.com/search/english/?q=%s",
+            ValidateQuery = async (url) =>
+            {
+                return !(await Helper.GetFinalRedirectAsync(url)).Contains("spellcheck");
+            },
+            Icon = PackIconKind.LetterOBox,
+            Name = "Oxford Advanced Learner's Dictionary",
+        };
+
+        public static Dictionary DictionaryCom = new Dictionary()
+        {
+            Url = "https://www.dictionary.com/browse/%s",
+            ValidateQuery = async (url) =>
+            {
+                return !(await Helper.GetFinalRedirectAsync(url)).Contains("misspelling");
+            },
+            Icon = PackIconKind.LetterDBox,
+            Name = "Dictionary.com",
         };
 
         public static Dictionary GoogleDefinitions = new Dictionary()

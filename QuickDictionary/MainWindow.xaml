@@ -106,52 +106,50 @@
                 IsIndeterminate="True"
                 Visibility="Hidden" />
         </Grid>
-        <Grid
-            Margin="5"
-            Grid.Row="1">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition
-                    Width="Auto" />
-                <ColumnDefinition
-                    Width="Auto" />
-                <ColumnDefinition
-                    Width="Auto" />
-            </Grid.ColumnDefinitions>
-            <CheckBox
-                Name="checkPause"
-                Margin="5 0 0 0"
-                Style="{StaticResource MaterialDesignCheckBox}"
-                Grid.Column="0"
-                ToolTip="Stop looking up words in the clipboard">
-                Pause
-            </CheckBox>
-            <CheckBox
-                Name="checkTopmost"
-                Margin="5 0 0 0"
-                Style="{StaticResource MaterialDesignCheckBox}"
-                Grid.Column="1">
-                Always on top
-            </CheckBox>
-            <ListBox
-                x:Name="listDictionaries"
-                Margin="5 0 0 0"
-                Grid.Column="2"
-                SelectionMode="Extended"
-                Style="{StaticResource MaterialDesignToolToggleFlatListBox}"
-                SelectionChanged="listDictionaries_SelectionChanged">
-                <ListBox.ItemTemplate>
-                    <DataTemplate>
-                        <materialDesign:Badged
-                            Margin="0 5 0 0"
-                            Badge="{Binding PrecedenceString}"
-                            ToolTip="{Binding Name}">
-                            <materialDesign:PackIcon
-                                Kind="{Binding Icon}" />
-                        </materialDesign:Badged>
-                    </DataTemplate>
-                </ListBox.ItemTemplate>
-            </ListBox>
-        </Grid>
+        <ScrollViewer
+            Name="scrollToolbar"
+            Grid.Row="1"
+            HorizontalAlignment="Stretch"
+            CanContentScroll="False"
+            HorizontalScrollBarVisibility="Hidden"
+            VerticalScrollBarVisibility="Disabled"
+            PreviewMouseWheel="ScrollViewer_PreviewMouseWheel">
+            <StackPanel
+                Margin="5"
+                Orientation="Horizontal">
+                <CheckBox
+                    Name="checkPause"
+                    Margin="5 0 0 0"
+                    Style="{StaticResource MaterialDesignCheckBox}"
+                    ToolTip="Stop looking up words in the clipboard">
+                    Pause
+                </CheckBox>
+                <CheckBox
+                    Name="checkTopmost"
+                    Margin="5 0 0 0"
+                    Style="{StaticResource MaterialDesignCheckBox}">
+                    Always on top
+                </CheckBox>
+                <ListBox
+                    x:Name="listDictionaries"
+                    Margin="5 0 0 0"
+                    SelectionMode="Extended"
+                    Style="{StaticResource MaterialDesignToolToggleFlatListBox}"
+                    SelectionChanged="listDictionaries_SelectionChanged">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <materialDesign:Badged
+                                Margin="0 5 0 0"
+                                Badge="{Binding PrecedenceString}"
+                                ToolTip="{Binding Name}">
+                                <materialDesign:PackIcon
+                                    Kind="{Binding Icon}" />
+                            </materialDesign:Badged>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </StackPanel>
+        </ScrollViewer>
         <cefSharp:ChromiumWebBrowser
             Name="browser"
             Grid.Row="2"
