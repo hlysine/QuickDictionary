@@ -264,7 +264,7 @@
       <Output TaskParameter="Assemblies" ItemName="myAssemblyInfo" />
     </GetAssemblyIdentity>
     <Exec Command="nuget pack QuickDictionary.nuspec -Version %(myAssemblyInfo.Version) -Properties Configuration=Release -OutputDirectory $(OutDir) -BasePath $(OutDir)" />
-    <Exec Command="squirrel --releasify $(OutDir)QuickDictionary.$([System.Version]::Parse(%(myAssemblyInfo.Version)).ToString(3)).nupkg" />
+    <Exec Command="..\packages\squirrel.windows.2.0.1\tools\squirrel --releasify $(OutDir)QuickDictionary.$([System.Version]::Parse(%(myAssemblyInfo.Version)).ToString(3)).nupkg" />
   </Target>
   <Import Project="..\packages\CefSharp.Common.84.4.10\build\CefSharp.Common.targets" Condition="Exists('..\packages\CefSharp.Common.84.4.10\build\CefSharp.Common.targets')" />
   <Import Project="..\packages\CefSharp.Wpf.84.4.10\build\CefSharp.Wpf.targets" Condition="Exists('..\packages\CefSharp.Wpf.84.4.10\build\CefSharp.Wpf.targets')" />
