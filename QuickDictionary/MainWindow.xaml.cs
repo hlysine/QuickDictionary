@@ -195,7 +195,7 @@ namespace QuickDictionary
 
             using (var mgr = await UpdateManager.GitHubUpdateManager("https://github.com/Henry-YSLin/QuickDictionary"))
             {
-                await mgr.UpdateApp((progress) => Dispatcher.Invoke(() => Title = title + $" - Updating {progress}%"));
+                await mgr.UpdateApp((progress) => Dispatcher.Invoke(() => Title = title + (progress > 95 ? "" : $" - Updating {progress}%")));
             }
         }
 

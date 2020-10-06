@@ -6,6 +6,7 @@ using System.Configuration;
 using System.Data;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -43,6 +44,45 @@ namespace QuickDictionary
             {
                 Current.Shutdown();
             }
+
+            SetupExceptionHandling();
+        }
+
+        private void SetupExceptionHandling()
+        {
+            AppDomain.CurrentDomain.UnhandledException += (s, e) =>
+                LogUnhandledException((Exception)e.ExceptionObject, "AppDomain.CurrentDomain.UnhandledException");
+
+            DispatcherUnhandledException += (s, e) =>
+            {
+                LogUnhandledException(e.Exception, "Application.Current.DispatcherUnhandledException");
+                e.Handled = true;
+            };
+
+            TaskScheduler.UnobservedTaskException += (s, e) =>
+            {
+                LogUnhandledException(e.Exception, "TaskScheduler.UnobservedTaskException");
+                e.SetObserved();
+            };
+        }
+
+        private void LogUnhandledException(Exception exception, string source)
+        {
+            StringBuilder message = new StringBuilder();
+            message.AppendLine($"Unhandled exception ({source})");
+            try
+            {
+                System.Reflection.AssemblyName assemblyName = System.Reflection.Assembly.GetExecutingAssembly().GetName();
+                message.AppendLine($" in {assemblyName.Name} v{assemblyName.Version}");
+            }
+            catch (Exception ex)
+            {
+            }
+            message.AppendLine(exception.Message);
+            message.AppendLine(exception.StackTrace);
+            message.AppendLine();
+            message.AppendLine();
+            File.AppendAllText("log.txt", message.ToString());
         }
     }
 }
