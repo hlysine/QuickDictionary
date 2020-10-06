@@ -1,14 +1,32 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Controls;
 
 namespace QuickDictionary
 {
     public static class Helper
     {
+        public static void HideBoundingBox(object root)
+        {
+            Control control = root as Control;
+            if (control != null)
+                control.FocusVisualStyle = null;
+
+            if (root is DependencyObject)
+            {
+                foreach (object child in LogicalTreeHelper.GetChildren((DependencyObject)root))
+                {
+                    HideBoundingBox(child);
+                }
+            }
+        }
+
         /// <summary>
         /// Blocks while condition is true or timeout occurs.
         /// </summary>
@@ -45,6 +63,17 @@ namespace QuickDictionary
             if (waitTask != await Task.WhenAny(waitTask,
                     Task.Delay(timeout)))
                 throw new TimeoutException();
+        }
+
+        public static System.Windows.Point RealPixelsToWpf(Window w, System.Windows.Point p)
+        {
+            var t = PresentationSource.FromVisual(w).CompositionTarget.TransformFromDevice;
+            return t.Transform(p);
+        }
+
+        public static double DistanceToPoint(this RectangleF rect, double x, double y)
+        {
+            return Math.Sqrt(Math.Pow(Math.Max(0, Math.Abs(rect.X + rect.Width / 2 - x) - rect.Width / 2), 2) + Math.Pow(Math.Max(0, Math.Abs(rect.Y + rect.Height / 2 - y) - rect.Height / 2), 2));
         }
 
         public static async Task<string> GetFinalRedirectAsync(string url)

@@ -16,13 +16,57 @@
     FontFamily="{DynamicResource MaterialDesignFont}"
     mc:Ignorable="d"
     Title="Quick Dictionary"
-    Height="450"
-    Width="800"
+    Height="800"
+    Width="400"
+    Name="mainWindow"
     DataContext="{Binding RelativeSource={RelativeSource Self}}"
-   SourceInitialized="Window_SourceInitialized"
-    Topmost="True">
-    <Grid>
+    SourceInitialized="Window_SourceInitialized"
+    Topmost="{Binding IsChecked, ElementName=checkTopmost}">
+    <Window.Resources>
+        <Storyboard
+            x:Key="shakeStoryboard">
+            <!--<DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)">-->
+            <DoubleAnimationUsingKeyFrames
+                Storyboard.TargetName="mainWindow"
+                Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
+                FillBehavior="Stop">
+                <SplineDoubleKeyFrame
+                    KeyTime="00:00:00.0500000"
+                    Value="-10" />
+                <SplineDoubleKeyFrame
+                    KeyTime="00:00:00.1000000"
+                    Value="0" />
+                <SplineDoubleKeyFrame
+                    KeyTime="00:00:00.1500000"
+                    Value="10" />
+                <SplineDoubleKeyFrame
+                    KeyTime="00:00:00.2000000"
+                    Value="0" />
+                <SplineDoubleKeyFrame
+                    KeyTime="00:00:00.2500000"
+                    Value="-10" />
+                <SplineDoubleKeyFrame
+                    KeyTime="00:00:00.3000000"
+                    Value="0" />
+                <SplineDoubleKeyFrame
+                    KeyTime="00:00:00.3500000"
+                    Value="10" />
+                <SplineDoubleKeyFrame
+                    KeyTime="00:00:00.4000000"
+                    Value="0" />
+            </DoubleAnimationUsingKeyFrames >
+        </Storyboard >
+    </Window.Resources>
+    <Window.RenderTransform>
+        <TranslateTransform
+            Y="0"
+            X="0" />
+    </Window.RenderTransform >
+    <Grid
+        Name="root">
         <Grid.RowDefinitions>
+            <RowDefinition
+                Height="Auto" />
             <RowDefinition
                 Height="Auto" />
             <RowDefinition
@@ -43,13 +87,50 @@
                 Margin="5"
                 Style="{StaticResource MaterialDesignOutlinedTextFieldTextBox}"
                 materialDesign:HintAssist.Hint="Word"
-                PreviewKeyUp="txtWord_PreviewKeyUp"/>
+                ToolTip="Enter a word (Alt+F)"
+                PreviewKeyUp="txtWord_PreviewKeyUp" />
+            <Button
+                Name="btnOCR"
+                Grid.Column="1"
+                Style="{StaticResource MaterialDesignIconButton}"
+                ToolTip="OCR look up (Alt+G)"
+                Click="btnOCR_Click">
+                <materialDesign:PackIcon
+                    Kind="Show" />
+            </Button>
+            <ProgressBar
+                Name="progressLoading"
+                Grid.Column="2"
+                Style="{StaticResource MaterialDesignCircularProgressBar}"
+                Value="0"
+                IsIndeterminate="True"
+                Visibility="Hidden" />
+        </Grid>
+        <Grid
+            Margin="5"
+            Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition
+                    Width="Auto" />
+                <ColumnDefinition
+                    Width="Auto" />
+                <ColumnDefinition
+                    Width="Auto" />
+            </Grid.ColumnDefinitions>
             <CheckBox
                 Name="checkPause"
                 Margin="5 0 0 0"
-                Style="{StaticResource MaterialDesignCheckBox}" 
-                Grid.Column="1">
+                Style="{StaticResource MaterialDesignCheckBox}"
+                Grid.Column="0"
+                ToolTip="Stop looking up words in the clipboard">
                 Pause
+            </CheckBox>
+            <CheckBox
+                Name="checkTopmost"
+                Margin="5 0 0 0"
+                Style="{StaticResource MaterialDesignCheckBox}"
+                Grid.Column="1">
+                Always on top
             </CheckBox>
             <ListBox
                 x:Name="listDictionaries"
@@ -61,7 +142,9 @@
                 <ListBox.ItemTemplate>
                     <DataTemplate>
                         <materialDesign:Badged
-                            Badge="{Binding PrecedenceString}">
+                            Margin="0 5 0 0"
+                            Badge="{Binding PrecedenceString}"
+                            ToolTip="{Binding Name}">
                             <materialDesign:PackIcon
                                 Kind="{Binding Icon}" />
                         </materialDesign:Badged>
@@ -71,8 +154,9 @@
         </Grid>
         <cefSharp:ChromiumWebBrowser
             Name="browser"
-            Grid.Row="1"
+            Grid.Row="2"
             VerticalAlignment="Stretch"
-            HorizontalAlignment="Stretch" />
+            HorizontalAlignment="Stretch"
+            LoadingStateChanged="browser_LoadingStateChanged" />
     </Grid>
 </Window>

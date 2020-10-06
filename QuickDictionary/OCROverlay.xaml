@@ -1,0 +1,63 @@
+﻿<Window
+    x:Class="QuickDictionary.OCROverlay"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:local="clr-namespace:QuickDictionary"
+    mc:Ignorable="d"
+    Title="OCR Overlay"
+    WindowState="Maximized"
+    WindowStyle="None"
+    Topmost="True"
+    ShowInTaskbar="False"
+    Loaded="Window_Loaded"
+    PreviewMouseMove="Canvas_PreviewMouseMove"
+    PreviewMouseDown="Canvas_PreviewMouseDown"
+    PreviewKeyDown="Window_PreviewKeyDown"
+    Deactivated="Window_Deactivated">
+    <Window.Triggers>
+        <EventTrigger
+            RoutedEvent="Window.Loaded">
+            <BeginStoryboard>
+                <Storyboard>
+                    <DoubleAnimation
+                        Storyboard.TargetProperty="Opacity"
+                        Storyboard.TargetName="imgBg"
+                        From="0"
+                        To="1"
+                        Duration="0:0:1"
+                        FillBehavior="HoldEnd"
+                        AutoReverse="False">
+                        <DoubleAnimation.EasingFunction>
+                            <ExponentialEase
+                                EasingMode="EaseIn"/>
+                        </DoubleAnimation.EasingFunction>
+                    </DoubleAnimation>
+                </Storyboard>
+            </BeginStoryboard>
+        </EventTrigger>
+    </Window.Triggers>
+    <Grid>
+        <Image
+            Name="imgBg"
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Stretch" />
+        <Border
+            BorderThickness="5"
+            BorderBrush="White"
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Stretch" />
+        <Canvas
+            Name="canvas">
+            <Border
+                Name="borderWord">
+                <Border.Background>
+                    <SolidColorBrush
+                        Color="LightBlue"
+                        Opacity="0.3" />
+                </Border.Background>
+            </Border>
+        </Canvas>
+    </Grid>
+</Window>
