@@ -23,6 +23,7 @@ using Tesseract;
 using System.IO;
 using System.Drawing;
 using System.Windows.Media.Animation;
+using Squirrel;
 
 namespace QuickDictionary
 {
@@ -37,10 +38,13 @@ namespace QuickDictionary
         TesseractEngine engine = new TesseractEngine("data/tessdata", "eng", EngineMode.LstmOnly);
         bool engineBusy = true;
 
+        string title;
+
         public MainWindow()
         {
             InitializeComponent();
             Helper.HideBoundingBox(root);
+
             dictionaries.Add(Dictionary.CambridgeCE);
             dictionaries.Add(Dictionary.MedicalDictionary);
             dictionaries.Add(Dictionary.GoogleDefinitions);
@@ -55,6 +59,9 @@ namespace QuickDictionary
             engine.SetVariable("tessedit_char_blacklist", "¢§+~»~`!@#$%^&*()_+={}[]|\\:\";<>?,./");
 
             engineBusy = false;
+
+            Title = "Quick Dictionary v" + System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString();
+            title = Title;
         }
 
         List<OCRWord> OCRWords = new List<OCRWord>();
@@ -185,6 +192,11 @@ namespace QuickDictionary
             // Initialize the clipboard now that we have a window source to use
             var windowClipboardManager = new ClipboardManager(this);
             windowClipboardManager.ClipboardChanged += ClipboardChanged;
+
+            using (var mgr = await UpdateManager.GitHubUpdateManager("https://github.com/Henry-YSLin/QuickDictionary"))
+            {
+                await mgr.UpdateApp((progress) => Dispatcher.Invoke(() => Title = title + $" - Updating {progress}%"));
+            }
         }
 
         private void ClipboardChanged(object sender, EventArgs e)
