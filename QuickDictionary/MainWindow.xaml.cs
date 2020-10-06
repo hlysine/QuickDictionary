@@ -24,6 +24,8 @@ using System.IO;
 using System.Drawing;
 using System.Windows.Media.Animation;
 using Squirrel;
+using CefSharp.Handler;
+using CefSharp;
 
 namespace QuickDictionary
 {
@@ -62,6 +64,8 @@ namespace QuickDictionary
 
             Title = "Quick Dictionary v" + System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString();
             title = Title;
+
+            browser.RequestHandler = new AdBlockRequestHandler();
         }
 
         List<OCRWord> OCRWords = new List<OCRWord>();
@@ -184,6 +188,7 @@ namespace QuickDictionary
         public event PropertyChangedEventHandler PropertyChanged;
 
         private ObservableCollection<Dictionary> dictionaries = new ObservableCollection<Dictionary>();
+        public static List<string> Adhosts = new List<string>();
 
         private async void Window_SourceInitialized(object sender, EventArgs e)
         {
@@ -193,9 +198,19 @@ namespace QuickDictionary
             var windowClipboardManager = new ClipboardManager(this);
             windowClipboardManager.ClipboardChanged += ClipboardChanged;
 
+            WebClient client = new WebClient();
+            Stream stream = client.OpenRead("https://raw.githubusercontent.com/anudeepND/blacklist/master/adservers.txt");
+            StreamReader reader = new StreamReader(stream);
+            string content = reader.ReadToEnd();
+            var matches = Regex.Matches(content, @"0\.0\.0\.0 (.+)");
+            foreach (Match match in matches)
+            {
+                Adhosts.Add(match.Groups[1].Value);
+            }
+
             using (var mgr = await UpdateManager.GitHubUpdateManager("https://github.com/Henry-YSLin/QuickDictionary"))
             {
-                await mgr.UpdateApp((progress) => Dispatcher.Invoke(() => Title = title + (progress > 95 ? "" : $" - Updating {progress}%")));
+                await mgr.UpdateApp((progress) => Dispatcher.Invoke(() => Title = title + (progress >= 99 ? "" : $" - Updating {progress}%")));
             }
         }
 
@@ -265,6 +280,16 @@ namespace QuickDictionary
         private void btnOCR_Click(object sender, RoutedEventArgs e)
         {
             startOCR();
+        }
+
+        public class AdBlockRequestHandler : RequestHandler
+        {
+            protected override bool OnBeforeBrowse(IWebBrowser chromiumWebBrowser, IBrowser browser, IFrame frame, IRequest request, bool userGesture, bool isRedirect)
+            {
+                bool block = Adhosts.Exists(x => request.Url.Contains(x));
+                if (block) Console.WriteLine("BLOCKED: " + request.Url);
+                return block;
+            }
         }
     }
 
