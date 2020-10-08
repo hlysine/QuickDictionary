@@ -197,7 +197,7 @@
                     HorizontalAlignment="Stretch"
                     LoadingStateChanged="browser_LoadingStateChanged" />
                 <ToggleButton
-                    Name="btnWordLists"
+                    Name="btnNewWordPanel"
                     Grid.Row="2"
                     Width="50"
                     Height="50"
@@ -208,8 +208,8 @@
                     ToolTip="Add to word list"
                     IsChecked="True"
                     Margin="10"
-                    Checked="btnWordLists_Checked"
-                    Unchecked="btnWordLists_Checked">
+                    Checked="btnNewWordPanel_Checked"
+                    Unchecked="btnNewWordPanel_Checked">
                     <ToggleButton.Content>
                         <materialDesign:PackIcon
                             Kind="PlaylistAdd" />

@@ -432,9 +432,9 @@ namespace QuickDictionary
             saveConfig();
         }
 
-        private void btnWordLists_Checked(object sender, RoutedEventArgs e)
+        private void btnNewWordPanel_Checked(object sender, RoutedEventArgs e)
         {
-            ShowNewWordPanel = btnWordLists.IsChecked.GetValueOrDefault();
+            ShowNewWordPanel = btnNewWordPanel.IsChecked.GetValueOrDefault();
         }
     }
 
