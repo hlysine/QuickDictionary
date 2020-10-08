@@ -12,7 +12,6 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
-using System.Windows.Shapes;
 using System.Text.RegularExpressions;
 using System.Net;
 using MaterialDesignThemes.Wpf;
@@ -26,6 +25,9 @@ using System.Windows.Media.Animation;
 using Squirrel;
 using CefSharp.Handler;
 using CefSharp;
+using System.Threading;
+using System.Xml.Serialization;
+using MoreLinq.Extensions;
 
 namespace QuickDictionary
 {
@@ -42,10 +44,48 @@ namespace QuickDictionary
 
         string title;
 
+        int updateProgress = 0;
+        public int UpdateProgress
+        {
+            get
+            {
+                return updateProgress;
+            }
+            set
+            {
+                updateProgress = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(UpdateProgress)));
+            }
+        }
+
+        bool showNewWordPanel = false;
+        public bool ShowNewWordPanel
+        {
+            get
+            {
+                return showNewWordPanel;
+            }
+            set
+            {
+                showNewWordPanel = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ShowNewWordPanel)));
+            }
+        }
+
+        private string persistentPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "QuickDictionary");
+
+        private bool stopSelectionUpdate = false;
+
+        SemaphoreSlim updateFinished = new SemaphoreSlim(0, 1);
+
         public MainWindow()
         {
             InitializeComponent();
             Helper.HideBoundingBox(root);
+
+            stopSelectionUpdate = true;
+
+            loadConfig();
 
             dictionaries.Add(Dictionary.CambridgeCE);
             dictionaries.Add(Dictionary.MedicalDictionary);
@@ -53,7 +93,21 @@ namespace QuickDictionary
             dictionaries.Add(Dictionary.DictionaryCom);
             dictionaries.Add(Dictionary.GoogleDefinitions);
             listDictionaries.ItemsSource = dictionaries;
-            listDictionaries.SelectAll();
+            listDictionaries.SelectedItems.Clear();
+            foreach (string dict in Config.SelectedDictionaries)
+            {
+                Dictionary d = dictionaries.FirstOrDefault(x => x.Name == dict);
+                if (d != null)
+                    listDictionaries.SelectedItems.Add(d);
+            }
+            foreach (Dictionary dict in dictionaries)
+            {
+                dict.Precedence = listDictionaries.SelectedItems.IndexOf(dict) + 1;
+            }
+
+            stopSelectionUpdate = false;
+            checkTopmost.IsChecked = Config.AlwaysOnTop;
+            checkPause.IsChecked = Config.PauseClipboard;
 
             keyHook.RegisterHotKey(ModifierKeys.Alt, System.Windows.Forms.Keys.F);
             keyHook.RegisterHotKey(ModifierKeys.Alt, System.Windows.Forms.Keys.G);
@@ -61,6 +115,11 @@ namespace QuickDictionary
 
             engine.SetVariable("tessedit_char_whitelist", "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-' ");
             engine.SetVariable("tessedit_char_blacklist", "¢§+~»~`!@#$%^&*()_+={}[]|\\:\";<>?,./");
+
+            if (!Directory.Exists(persistentPath))
+            {
+                Directory.CreateDirectory(persistentPath);
+            }
 
             engineBusy = false;
 
@@ -116,39 +175,26 @@ namespace QuickDictionary
                         OCRWords.Clear();
                         do
                         {
-                            do
-                            {
-                                do
+                            string word = iter.GetText(PageIteratorLevel.Word);
+
+                            if (!string.IsNullOrWhiteSpace(word))
+                                if (iter.TryGetBoundingBox(PageIteratorLevel.Word, out Tesseract.Rect rect))
                                 {
-                                    do
+                                    if (Regex.IsMatch(word, "[a-zA-Z]"))
                                     {
-                                        string word = iter.GetText(PageIteratorLevel.Word);
-
-                                        if (!string.IsNullOrWhiteSpace(word))
-                                            if (iter.TryGetBoundingBox(PageIteratorLevel.Word, out Tesseract.Rect rect))
+                                        Dispatcher.Invoke(() =>
+                                        {
+                                            System.Windows.Point p1 = Helper.RealPixelsToWpf(this, new System.Windows.Point(rect.X1, rect.Y1));
+                                            System.Windows.Point p2 = Helper.RealPixelsToWpf(this, new System.Windows.Point(rect.X2, rect.Y2));
+                                            OCRWords.Add(new OCRWord()
                                             {
-                                                if (Regex.IsMatch(word, "[a-zA-Z]"))
-                                                {
-                                                    Dispatcher.Invoke(() =>
-                                                    {
-                                                        System.Windows.Point p1 = Helper.RealPixelsToWpf(this, new System.Windows.Point(rect.X1, rect.Y1));
-                                                        System.Windows.Point p2 = Helper.RealPixelsToWpf(this, new System.Windows.Point(rect.X2, rect.Y2));
-                                                        OCRWords.Add(new OCRWord()
-                                                        {
-                                                            Rect = new RectangleF((float)p1.X, (float)p1.Y, (float)(p2.X - p1.X), (float)(p2.Y - p1.Y)),
-                                                            Word = word,
-                                                        });
-                                                    });
-                                                }
-                                            }
-
-                                    } while (iter.Next(PageIteratorLevel.TextLine, PageIteratorLevel.Word));
-
-                                } while (iter.Next(PageIteratorLevel.Para, PageIteratorLevel.TextLine));
-
-                            } while (iter.Next(PageIteratorLevel.Block, PageIteratorLevel.Para));
-
-                        } while (iter.Next(PageIteratorLevel.Block));
+                                                Rect = new RectangleF((float)p1.X, (float)p1.Y, (float)(p2.X - p1.X), (float)(p2.Y - p1.Y)),
+                                                Word = word,
+                                            });
+                                        });
+                                    }
+                                }
+                        } while (iter.Next(PageIteratorLevel.Word));
                     }
                 }
                 engineBusy = false;
@@ -175,7 +221,7 @@ namespace QuickDictionary
         private async void Overlay_WordSelected(object sender, System.Windows.Point position)
         {
             await Task.WhenAll(ocrTask);
-            if (position.X == -1 && position.Y == -1)
+            if (position.X < 0 && position.Y < 0)
             {
                 Dispatcher.Invoke(() => progressLoading.Visibility = Visibility.Hidden);
                 return;
@@ -191,6 +237,35 @@ namespace QuickDictionary
 
         private ObservableCollection<Dictionary> dictionaries = new ObservableCollection<Dictionary>();
         public static List<string> Adhosts = new List<string>();
+
+        public Config Config;
+
+        private void saveConfig()
+        {
+            using (FileStream fs = new FileStream(Path.Combine(persistentPath, "config.xml"), FileMode.Create))
+            {
+                XmlSerializer serializer = new XmlSerializer(typeof(Config));
+                serializer.Serialize(fs, Config);
+            }
+        }
+
+        private void loadConfig()
+        {
+            string path = Path.Combine(persistentPath, "config.xml");
+            if (File.Exists(path))
+            {
+                using (FileStream fs = new FileStream(path, FileMode.Open))
+                {
+                    XmlSerializer serializer = new XmlSerializer(typeof(Config));
+                    Config = (Config)serializer.Deserialize(fs);
+                }
+            }
+            else
+            {
+                Config = new Config();
+                Config.SelectedDictionaries = dictionaries.Select(x => x.Name).ToList();
+            }
+        }
 
         private async void Window_SourceInitialized(object sender, EventArgs e)
         {
@@ -210,11 +285,30 @@ namespace QuickDictionary
                 Adhosts.Add(match.Groups[1].Value);
             }
 
-            using (var mgr = await UpdateManager.GitHubUpdateManager("https://github.com/Henry-YSLin/QuickDictionary"))
+            try
             {
-                await mgr.UpdateApp((progress) => Dispatcher.Invoke(() => Title = title + $" - Updating {progress}%"));
-                Dispatcher.Invoke(() => Title = title);
+                using (var mgr = await UpdateManager.GitHubUpdateManager("https://github.com/Henry-YSLin/QuickDictionary"))
+                {
+                    var result = await mgr.UpdateApp((progress) =>
+                    {
+                        UpdateProgress = progress;
+                        Dispatcher.Invoke(() => Title = title + $" - Updating {progress}%");
+                    });
+                    if (result.Version.Version.CompareTo(System.Reflection.Assembly.GetExecutingAssembly().GetName().Version) == 0)
+                    {
+                        Dispatcher.Invoke(() => Title = title);
+                    }
+                    else
+                    {
+                        Dispatcher.Invoke(() => Title = title + " - Restart app to update");
+                    }
+                }
             }
+            catch (Exception ex)
+            {
+                App.LogUnhandledException(ex, ex.Source);
+            }
+            updateFinished.Release();
         }
 
         private void ClipboardChanged(object sender, EventArgs e)
@@ -270,10 +364,13 @@ namespace QuickDictionary
 
         private void listDictionaries_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            if (stopSelectionUpdate) return;
             foreach (Dictionary dict in dictionaries)
             {
                 dict.Precedence = listDictionaries.SelectedItems.IndexOf(dict) + 1;
             }
+            Config.SelectedDictionaries = listDictionaries.SelectedItems.Cast<Dictionary>().Select(x => x.Name).ToList();
+            saveConfig();
         }
 
         private void browser_LoadingStateChanged(object sender, CefSharp.LoadingStateChangedEventArgs e)
@@ -304,6 +401,40 @@ namespace QuickDictionary
                 scrollToolbar.LineLeft();
 
             e.Handled = true;
+        }
+
+        bool waitingForUpdate = false;
+
+        private async void mainWindow_Closing(object sender, CancelEventArgs e)
+        {
+            if (waitingForUpdate)
+            {
+                e.Cancel = true;
+                return;
+            }
+            if (updateFinished.CurrentCount <= 0)
+            {
+                // Still updating
+                waitingForUpdate = true;
+                e.Cancel = true;
+                gridApp.Visibility = Visibility.Collapsed;
+                gridUpdate.Visibility = Visibility.Visible;
+                await updateFinished.WaitAsync();
+                waitingForUpdate = false;
+                Close();
+            }
+        }
+
+        private void check_Checked(object sender, RoutedEventArgs e)
+        {
+            Config.PauseClipboard = checkPause.IsChecked.GetValueOrDefault();
+            Config.AlwaysOnTop = checkTopmost.IsChecked.GetValueOrDefault();
+            saveConfig();
+        }
+
+        private void btnWordLists_Checked(object sender, RoutedEventArgs e)
+        {
+            ShowNewWordPanel = btnWordLists.IsChecked.GetValueOrDefault();
         }
     }
 

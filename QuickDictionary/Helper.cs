@@ -27,6 +27,16 @@ namespace QuickDictionary
             }
         }
 
+        public static void Show(this UIElement element)
+        {
+            element.Visibility = Visibility.Visible;
+        }
+
+        public static void Hide(this UIElement element, bool collapse = true)
+        {
+            element.Visibility = collapse ? Visibility.Collapsed : Visibility.Hidden;
+        }
+
         /// <summary>
         /// Blocks while condition is true or timeout occurs.
         /// </summary>

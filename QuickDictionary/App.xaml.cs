@@ -66,10 +66,10 @@ namespace QuickDictionary
             };
         }
 
-        private void LogUnhandledException(Exception exception, string source)
+        public static void LogUnhandledException(Exception exception, string source)
         {
             StringBuilder message = new StringBuilder();
-            message.AppendLine($"Unhandled exception ({source})");
+            message.AppendLine($"[{DateTime.Now:R}] Unhandled exception ({source})");
             try
             {
                 System.Reflection.AssemblyName assemblyName = System.Reflection.Assembly.GetExecutingAssembly().GetName();
@@ -82,7 +82,7 @@ namespace QuickDictionary
             message.AppendLine(exception.StackTrace);
             message.AppendLine();
             message.AppendLine();
-            File.AppendAllText("log.txt", message.ToString());
+            File.AppendAllText(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "QuickDictionary\\log.txt"), message.ToString());
         }
     }
 }

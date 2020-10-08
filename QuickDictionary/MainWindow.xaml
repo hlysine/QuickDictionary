@@ -21,8 +21,11 @@
     Name="mainWindow"
     DataContext="{Binding RelativeSource={RelativeSource Self}}"
     SourceInitialized="Window_SourceInitialized"
-    Topmost="{Binding IsChecked, ElementName=checkTopmost}">
+    Topmost="{Binding IsChecked, ElementName=checkTopmost}"
+    Closing="mainWindow_Closing">
     <Window.Resources>
+        <local:BoolToVisibilityConverter
+            x:Key="BoolToVisibilityConverter" />
         <Storyboard
             x:Key="shakeStoryboard">
             <!--<DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)">-->
@@ -64,97 +67,284 @@
     </Window.RenderTransform >
     <Grid
         Name="root">
-        <Grid.RowDefinitions>
-            <RowDefinition
-                Height="Auto" />
-            <RowDefinition
-                Height="Auto" />
-            <RowDefinition
-                Height="*" />
-        </Grid.RowDefinitions>
-        <Grid
-            Margin="5">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition
-                    Width="*" />
-                <ColumnDefinition
-                    Width="Auto" />
-                <ColumnDefinition
-                    Width="Auto" />
-            </Grid.ColumnDefinitions>
-            <TextBox
-                Name="txtWord"
-                Margin="5"
-                Style="{StaticResource MaterialDesignOutlinedTextFieldTextBox}"
-                materialDesign:HintAssist.Hint="Word"
-                ToolTip="Enter a word (Alt+F)"
-                PreviewKeyUp="txtWord_PreviewKeyUp" />
-            <Button
-                Name="btnOCR"
-                Grid.Column="1"
-                Style="{StaticResource MaterialDesignIconButton}"
-                ToolTip="OCR look up (Alt+G)"
-                Click="btnOCR_Click">
-                <materialDesign:PackIcon
-                    Kind="Show" />
-            </Button>
-            <ProgressBar
-                Name="progressLoading"
-                Grid.Column="2"
-                Style="{StaticResource MaterialDesignCircularProgressBar}"
-                Value="0"
-                IsIndeterminate="True"
-                Visibility="Hidden" />
-        </Grid>
-        <ScrollViewer
-            Name="scrollToolbar"
-            Grid.Row="1"
-            HorizontalAlignment="Stretch"
-            CanContentScroll="False"
-            HorizontalScrollBarVisibility="Hidden"
-            VerticalScrollBarVisibility="Disabled"
-            PreviewMouseWheel="ScrollViewer_PreviewMouseWheel">
-            <StackPanel
-                Margin="5"
-                Orientation="Horizontal">
-                <CheckBox
-                    Name="checkPause"
-                    Margin="5 0 0 0"
-                    Style="{StaticResource MaterialDesignCheckBox}"
-                    ToolTip="Stop looking up words in the clipboard">
-                    Pause
-                </CheckBox>
-                <CheckBox
-                    Name="checkTopmost"
-                    Margin="5 0 0 0"
-                    Style="{StaticResource MaterialDesignCheckBox}">
-                    Always on top
-                </CheckBox>
-                <ListBox
-                    x:Name="listDictionaries"
-                    Margin="5 0 0 0"
-                    SelectionMode="Extended"
-                    Style="{StaticResource MaterialDesignToolToggleFlatListBox}"
-                    SelectionChanged="listDictionaries_SelectionChanged">
-                    <ListBox.ItemTemplate>
-                        <DataTemplate>
-                            <materialDesign:Badged
-                                Margin="0 5 0 0"
-                                Badge="{Binding PrecedenceString}"
-                                ToolTip="{Binding Name}">
+        <materialDesign:DrawerHost>
+            <materialDesign:DrawerHost.BottomDrawerContent>
+                <StackPanel
+                    Margin="16">
+                    <TextBlock
+                        Margin="4"
+                        HorizontalAlignment="Center">
+                        List of word lists
+                    </TextBlock>
+                    <Button
+                        Command="{x:Static materialDesign:DrawerHost.CloseDrawerCommand}"
+                        CommandParameter="{x:Static Dock.Bottom}"
+                        Margin="4"
+                        HorizontalAlignment="Center"
+                        Style="{DynamicResource MaterialDesignFlatButton}">
+                        CLOSE THIS
+                    </Button>
+                </StackPanel>
+            </materialDesign:DrawerHost.BottomDrawerContent>
+            <Grid
+                Name="gridApp">
+                <Grid.RowDefinitions>
+                    <RowDefinition
+                        Height="Auto" />
+                    <RowDefinition
+                        Height="Auto" />
+                    <RowDefinition
+                        Height="*" />
+                    <RowDefinition
+                        Height="Auto" />
+                </Grid.RowDefinitions>
+                <Grid
+                    Margin="5">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition
+                            Width="*" />
+                        <ColumnDefinition
+                            Width="Auto" />
+                        <ColumnDefinition
+                            Width="Auto" />
+                        <ColumnDefinition
+                            Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBox
+                        Name="txtWord"
+                        Margin="5"
+                        Style="{StaticResource MaterialDesignOutlinedTextFieldTextBox}"
+                        materialDesign:HintAssist.Hint="Word"
+                        ToolTip="Enter a word (Alt+F)"
+                        PreviewKeyUp="txtWord_PreviewKeyUp" />
+                    <ProgressBar
+                        Name="progressLoading"
+                        Grid.Column="1"
+                        Style="{StaticResource MaterialDesignCircularProgressBar}"
+                        Value="0"
+                        IsIndeterminate="True"
+                        Visibility="Hidden" />
+                    <Button
+                        Name="btnWordLists"
+                        Grid.Column="2"
+                        Style="{StaticResource MaterialDesignIconButton}"
+                        ToolTip="Manage word lists">
+                        <materialDesign:PackIcon
+                            Kind="PlaylistStar" />
+                    </Button>
+                    <Button
+                        Name="btnOCR"
+                        Grid.Column="3"
+                        Style="{StaticResource MaterialDesignIconButton}"
+                        ToolTip="OCR look up (Alt+G)"
+                        Click="btnOCR_Click">
+                        <materialDesign:PackIcon
+                            Kind="Show" />
+                    </Button>
+                </Grid>
+                <ScrollViewer
+                    Name="scrollToolbar"
+                    Grid.Row="1"
+                    HorizontalAlignment="Stretch"
+                    CanContentScroll="False"
+                    HorizontalScrollBarVisibility="Hidden"
+                    VerticalScrollBarVisibility="Disabled"
+                    PreviewMouseWheel="ScrollViewer_PreviewMouseWheel">
+                    <StackPanel
+                        Margin="5"
+                        Orientation="Horizontal">
+                        <CheckBox
+                            Name="checkPause"
+                            Margin="5 0 0 0"
+                            Style="{StaticResource MaterialDesignCheckBox}"
+                            ToolTip="Stop looking up words in the clipboard"
+                            Checked="check_Checked"
+                            Unchecked="check_Checked">
+                            Pause
+                        </CheckBox>
+                        <CheckBox
+                            Name="checkTopmost"
+                            Margin="5 0 0 0"
+                            Style="{StaticResource MaterialDesignCheckBox}"
+                            Checked="check_Checked"
+                            Unchecked="check_Checked">
+                            Always on top
+                        </CheckBox>
+                        <ListBox
+                            x:Name="listDictionaries"
+                            Margin="5 0 0 0"
+                            SelectionMode="Extended"
+                            Style="{StaticResource MaterialDesignToolToggleFlatListBox}"
+                            SelectionChanged="listDictionaries_SelectionChanged">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <materialDesign:Badged
+                                        Margin="0 5 0 0"
+                                        Badge="{Binding PrecedenceString}"
+                                        ToolTip="{Binding Name}">
+                                        <materialDesign:PackIcon
+                                            Kind="{Binding Icon}" />
+                                    </materialDesign:Badged>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </StackPanel>
+                </ScrollViewer>
+                <cefSharp:ChromiumWebBrowser
+                    Name="browser"
+                    Grid.Row="2"
+                    VerticalAlignment="Stretch"
+                    HorizontalAlignment="Stretch"
+                    LoadingStateChanged="browser_LoadingStateChanged" />
+                <ToggleButton
+                    Name="btnWordLists"
+                    Grid.Row="2"
+                    Width="50"
+                    Height="50"
+                    materialDesign:ShadowAssist.ShadowDepth="Depth2"
+                    VerticalAlignment="Bottom"
+                    HorizontalAlignment="Right"
+                    Style="{StaticResource MaterialDesignActionToggleButton}"
+                    ToolTip="Add to word list"
+                    IsChecked="True"
+                    Margin="10"
+                    Checked="btnWordLists_Checked"
+                    Unchecked="btnWordLists_Checked">
+                    <ToggleButton.Content>
+                        <materialDesign:PackIcon
+                            Kind="PlaylistAdd" />
+                    </ToggleButton.Content>
+                    <materialDesign:ToggleButtonAssist.OnContent>
+                        <materialDesign:PackIcon
+                            Kind="ChevronDown" />
+                    </materialDesign:ToggleButtonAssist.OnContent>
+                </ToggleButton>
+                <materialDesign:Card
+                    Name="cardNewWord"
+                    Grid.Row="3"
+                    Margin="0 -6 0 -10"
+                    Padding="8 8 8 18"
+                    HorizontalAlignment="Stretch"
+                    UniformCornerRadius="6"
+                    Visibility="{Binding ShowNewWordPanel, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition
+                                Height="Auto" />
+                            <RowDefinition
+                                Height="Auto" />
+                            <RowDefinition
+                                Height="Auto" />
+                            <RowDefinition
+                                Height="Auto" />
+                            <RowDefinition
+                                Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <TextBox
+                            Name="txtNewWord"
+                            Margin="5"
+                            Style="{StaticResource MaterialDesignOutlinedTextFieldTextBox}"
+                            materialDesign:HintAssist.Hint="Word"
+                            ToolTip="Word" />
+                        <Button
+                            Name="btnNewList"
+                            Grid.Row="1"
+                            Margin="5"
+                            Style="{StaticResource MaterialDesignOutlinedButton}"
+                            ToolTip="Word list to add this word to"
+                            HorizontalContentAlignment="Stretch"
+                            VerticalContentAlignment="Center"
+                            Command="{x:Static materialDesign:DrawerHost.OpenDrawerCommand}"
+                            CommandParameter="{x:Static Dock.Bottom}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition
+                                        Width="Auto" />
+                                    <ColumnDefinition
+                                        Width="*" />
+                                    <ColumnDefinition
+                                        Width="Auto" />
+                                </Grid.ColumnDefinitions>
                                 <materialDesign:PackIcon
-                                    Kind="{Binding Icon}" />
-                            </materialDesign:Badged>
-                        </DataTemplate>
-                    </ListBox.ItemTemplate>
-                </ListBox>
+                                    Kind="PlaylistStar" />
+                                <TextBlock
+                                    Grid.Column="1"
+                                    Text="Favourites" />
+                                <materialDesign:PackIcon
+                                    Grid.Column="2"
+                                    Kind="ArrowDropDown" />
+                            </Grid>
+                        </Button>
+                        <TextBox
+                            Name="txtNewLink"
+                            Grid.Row="2"
+                            IsReadOnly="True"
+                            Margin="5"
+                            Style="{StaticResource MaterialDesignOutlinedTextFieldTextBox}"
+                            materialDesign:HintAssist.Hint="Link"
+                            ToolTip="Link to entry in dictionary" />
+                        <TextBox
+                            Name="txtNewDesc"
+                            Grid.Row="3"
+                            Margin="5"
+                            Style="{StaticResource MaterialDesignOutlinedTextFieldTextBox}"
+                            AcceptsReturn="True"
+                            TextWrapping="Wrap"
+                            MaxHeight="300"
+                            VerticalScrollBarVisibility="Auto"
+                            materialDesign:HintAssist.Hint="Description"
+                            ToolTip="Description" />
+                        <Button
+                            Name="btnAddWord"
+                            Grid.Row="4"
+                            Margin="5"
+                            Style="{StaticResource MaterialDesignRaisedButton}"
+                            ToolTip="Add the word to list">
+                            SAVE
+                        </Button>
+                    </Grid>
+                </materialDesign:Card>
+            </Grid>
+        </materialDesign:DrawerHost>
+        <Grid
+            Name="gridUpdate"
+            Visibility="Collapsed">
+            <StackPanel
+                VerticalAlignment="Center"
+                HorizontalAlignment="Stretch"
+                Margin="10"
+                Orientation="Vertical">
+                <TextBlock
+                    Margin="5"
+                    Style="{StaticResource MaterialDesignHeadline6TextBlock}"
+                    TextWrapping="Wrap">
+                    Quick Dictionary is updating
+                </TextBlock>
+                <TextBlock
+                    Margin="5"
+                    Style="{StaticResource MaterialDesignBody2TextBlock}"
+                    TextWrapping="Wrap">
+                    The app will close automatically once the update is done
+                </TextBlock>
+                <Grid
+                    Margin="5"
+                    HorizontalAlignment="Stretch">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition
+                            Width="*" />
+                        <ColumnDefinition
+                            Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <ProgressBar
+                        Value="{Binding UpdateProgress}" />
+                    <TextBlock
+                        Grid.Column="1"
+                        Margin="5 0 0 0"
+                        Style="{StaticResource MaterialDesignCaptionTextBlock}"
+                        Text="{Binding UpdateProgress, StringFormat={}{0}%}">
+                    </TextBlock>
+                </Grid>
             </StackPanel>
-        </ScrollViewer>
-        <cefSharp:ChromiumWebBrowser
-            Name="browser"
-            Grid.Row="2"
-            VerticalAlignment="Stretch"
-            HorizontalAlignment="Stretch"
-            LoadingStateChanged="browser_LoadingStateChanged" />
+        </Grid>
     </Grid>
 </Window>
