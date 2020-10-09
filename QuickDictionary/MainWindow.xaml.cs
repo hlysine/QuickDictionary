@@ -329,6 +329,7 @@ namespace QuickDictionary
                         UpdateProgress = progress;
                         Dispatcher.Invoke(() => Title = title + $" - Updating {progress}%");
                     });
+                    await Task.Delay(500);
                     if (result.Version.Version.CompareTo(System.Reflection.Assembly.GetExecutingAssembly().GetName().Version) == 0)
                     {
                         Dispatcher.Invoke(() => Title = title);
