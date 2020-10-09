@@ -324,19 +324,24 @@ namespace QuickDictionary
             {
                 using (var mgr = await UpdateManager.GitHubUpdateManager("https://github.com/Henry-YSLin/QuickDictionary"))
                 {
-                    var result = await mgr.UpdateApp((progress) =>
+                    var updateInfo = await mgr.CheckForUpdate(false, (progress) =>
                     {
                         UpdateProgress = progress;
-                        Dispatcher.Invoke(() => Title = title + $" - Updating {progress}%");
+                        Dispatcher.Invoke(() => Title = title + $" - Checking {progress}%");
                     });
-                    await Task.Delay(500);
-                    if (result.Version.Version.CompareTo(System.Reflection.Assembly.GetExecutingAssembly().GetName().Version) == 0)
+                    if (updateInfo.ReleasesToApply.Any())
                     {
-                        Dispatcher.Invoke(() => Title = title);
+                        var result = await mgr.UpdateApp((progress) =>
+                        {
+                            UpdateProgress = progress;
+                            Dispatcher.Invoke(() => Title = title + $" - Updating {progress}%");
+                        });
+                        await Task.Delay(500);
+                        Dispatcher.Invoke(() => Title = title + " - Restart app to update");
                     }
                     else
                     {
-                        Dispatcher.Invoke(() => Title = title + " - Restart app to update");
+                        Dispatcher.Invoke(() => Title = title);
                     }
                 }
             }
@@ -439,24 +444,19 @@ namespace QuickDictionary
             e.Handled = true;
         }
 
-        bool waitingForUpdate = false;
+        bool canExit = false;
 
         private async void mainWindow_Closing(object sender, CancelEventArgs e)
         {
-            if (waitingForUpdate)
-            {
-                e.Cancel = true;
-                return;
-            }
+            if (canExit) return;
             if (updateFinished.CurrentCount <= 0)
             {
                 // Still updating
-                waitingForUpdate = true;
                 e.Cancel = true;
                 gridApp.Visibility = Visibility.Collapsed;
                 gridUpdate.Visibility = Visibility.Visible;
                 await updateFinished.WaitAsync();
-                waitingForUpdate = false;
+                canExit = true;
                 Close();
             }
         }
