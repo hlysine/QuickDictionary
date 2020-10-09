@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MoreLinq.Extensions;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
@@ -34,11 +35,13 @@ namespace QuickDictionary
             }
             string[] lists = Directory.GetFiles(wordlistPath, "*.xml", SearchOption.TopDirectoryOnly);
             WordLists.Clear();
-            var ret = Parallel.ForEach(lists, (listpath) =>
+            await Task.Run(() =>
             {
-                WordLists.Add(new PathWordListPair(listpath, LoadList(listpath)));
+                foreach (string listpath in lists)
+                {
+                    WordLists.Add(new PathWordListPair(listpath, LoadList(listpath)));
+                }
             });
-            await Helper.WaitUntil(() => ret.IsCompleted);
         }
 
         public static void SaveList(PathWordListPair wordListPair)
