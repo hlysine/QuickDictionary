@@ -28,6 +28,8 @@ using CefSharp;
 using System.Threading;
 using System.Xml.Serialization;
 using MoreLinq.Extensions;
+using System.Globalization;
+using CefSharp.Wpf;
 
 namespace QuickDictionary
 {
@@ -72,6 +74,34 @@ namespace QuickDictionary
             }
         }
 
+        string newListName;
+        public string NewListName
+        {
+            get
+            {
+                return newListName;
+            }
+            set
+            {
+                newListName = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(NewListName)));
+            }
+        }
+
+        PathWordListPair selectedWordList = null;
+        public PathWordListPair SelectedWordList
+        {
+            get
+            {
+                return selectedWordList;
+            }
+            set
+            {
+                selectedWordList = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SelectedWordList)));
+            }
+        }
+
         private string persistentPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "QuickDictionary");
 
         private bool stopSelectionUpdate = false;
@@ -82,51 +112,6 @@ namespace QuickDictionary
         {
             InitializeComponent();
             Helper.HideBoundingBox(root);
-
-            stopSelectionUpdate = true;
-
-            loadConfig();
-
-            dictionaries.Add(Dictionary.CambridgeCE);
-            dictionaries.Add(Dictionary.MedicalDictionary);
-            dictionaries.Add(Dictionary.OxfordLearnersDict);
-            dictionaries.Add(Dictionary.DictionaryCom);
-            dictionaries.Add(Dictionary.GoogleDefinitions);
-            listDictionaries.ItemsSource = dictionaries;
-            listDictionaries.SelectedItems.Clear();
-            foreach (string dict in Config.SelectedDictionaries)
-            {
-                Dictionary d = dictionaries.FirstOrDefault(x => x.Name == dict);
-                if (d != null)
-                    listDictionaries.SelectedItems.Add(d);
-            }
-            foreach (Dictionary dict in dictionaries)
-            {
-                dict.Precedence = listDictionaries.SelectedItems.IndexOf(dict) + 1;
-            }
-
-            stopSelectionUpdate = false;
-            checkTopmost.IsChecked = Config.AlwaysOnTop;
-            checkPause.IsChecked = Config.PauseClipboard;
-
-            keyHook.RegisterHotKey(ModifierKeys.Alt, System.Windows.Forms.Keys.F);
-            keyHook.RegisterHotKey(ModifierKeys.Alt, System.Windows.Forms.Keys.G);
-            keyHook.KeyPressed += KeyHook_KeyPressed;
-
-            engine.SetVariable("tessedit_char_whitelist", "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-' ");
-            engine.SetVariable("tessedit_char_blacklist", "¢§+~»~`!@#$%^&*()_+={}[]|\\:\";<>?,./");
-
-            if (!Directory.Exists(persistentPath))
-            {
-                Directory.CreateDirectory(persistentPath);
-            }
-
-            engineBusy = false;
-
-            Title = "Quick Dictionary v" + System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString();
-            title = Title;
-
-            browser.RequestHandler = new AdBlockRequestHandler();
         }
 
         List<OCRWord> OCRWords = new List<OCRWord>();
@@ -269,6 +254,56 @@ namespace QuickDictionary
 
         private async void Window_SourceInitialized(object sender, EventArgs e)
         {
+            stopSelectionUpdate = true;
+
+            loadConfig();
+
+            await WordListManager.LoadAllLists();
+
+            dictionaries.Add(Dictionary.CambridgeCE);
+            dictionaries.Add(Dictionary.MedicalDictionary);
+            dictionaries.Add(Dictionary.OxfordLearnersDict);
+            dictionaries.Add(Dictionary.DictionaryCom);
+            dictionaries.Add(Dictionary.GoogleDefinitions);
+            listDictionaries.ItemsSource = dictionaries;
+            listDictionaries.SelectedItems.Clear();
+            foreach (string dict in Config.SelectedDictionaries)
+            {
+                Dictionary d = dictionaries.FirstOrDefault(x => x.Name == dict);
+                if (d != null)
+                    listDictionaries.SelectedItems.Add(d);
+            }
+            foreach (Dictionary dict in dictionaries)
+            {
+                dict.Precedence = listDictionaries.SelectedItems.IndexOf(dict) + 1;
+            }
+            SelectedWordList = WordListManager.WordLists.FirstOrDefault(x => x.WordList.Name == Config.LastWordListName);
+            listWordListSelector.ItemsSource = WordListManager.WordLists;
+
+            stopSelectionUpdate = false;
+
+            checkTopmost.IsChecked = Config.AlwaysOnTop;
+            checkPause.IsChecked = Config.PauseClipboard;
+
+            keyHook.RegisterHotKey(ModifierKeys.Alt, System.Windows.Forms.Keys.F);
+            keyHook.RegisterHotKey(ModifierKeys.Alt, System.Windows.Forms.Keys.G);
+            keyHook.KeyPressed += KeyHook_KeyPressed;
+
+            engine.SetVariable("tessedit_char_whitelist", "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-' ");
+            engine.SetVariable("tessedit_char_blacklist", "¢§+~»~`!@#$%^&*()_+={}[]|\\:\";<>?,./");
+
+            if (!Directory.Exists(persistentPath))
+            {
+                Directory.CreateDirectory(persistentPath);
+            }
+
+            engineBusy = false;
+
+            Title = "Quick Dictionary v" + System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString();
+            title = Title;
+
+            browser.RequestHandler = new AdBlockRequestHandler();
+
             await Helper.WaitUntil(() => browser.IsBrowserInitialized);
 
             // Initialize the clipboard now that we have a window source to use
@@ -306,7 +341,7 @@ namespace QuickDictionary
             }
             catch (Exception ex)
             {
-                App.LogUnhandledException(ex, ex.Source);
+                App.LogException(ex, ex.Source);
             }
             updateFinished.Release();
         }
@@ -432,9 +467,181 @@ namespace QuickDictionary
             saveConfig();
         }
 
-        private void btnNewWordPanel_Checked(object sender, RoutedEventArgs e)
+        string lastWordUrl = null;
+
+        private async void btnNewWordPanel_Checked(object sender, RoutedEventArgs e)
         {
-            ShowNewWordPanel = btnNewWordPanel.IsChecked.GetValueOrDefault();
+            //ShowNewWordPanel = btnNewWordPanel.IsChecked.GetValueOrDefault();
+            if (!ShowNewWordPanel) return;
+            if (!browser.IsBrowserInitialized)
+            {
+                Dispatcher.Invoke(() =>
+                {
+                    gridNewWordDetails.Show();
+                    gridNewWordLoading.Hide();
+                });
+                return;
+            }
+            if (browser.Address == lastWordUrl)
+            {
+                Dispatcher.Invoke(() =>
+                {
+                    txtNewLink.Text = browser.Address;
+                    gridNewWordDetails.Show();
+                    gridNewWordLoading.Hide();
+                });
+            }
+            else
+            {
+                Dispatcher.Invoke(() =>
+                {
+                    gridNewWordLoading.Show();
+                    gridNewWordDetails.Hide();
+                    btnNewWordPanel.IsEnabled = false;
+                });
+
+                var dict = dictionaries.FirstOrDefault(x => new Uri(x.Url).Host.Trim().ToLower() == new Uri(browser.Address).Host.Trim().ToLower());
+                if (dict != null)
+                {
+                    string headword = null;
+                    try
+                    {
+                        headword = await dict.GetWord(browser);
+                    }
+                    catch (Exception ex)
+                    {
+                        App.LogException(ex, ex.Source);
+                    }
+                    if (string.IsNullOrWhiteSpace(headword)) headword = txtWord.Text;
+                    string desc = "";
+                    try
+                    {
+                        desc = await dict.GetDescription(browser);
+                    }
+                    catch (Exception ex)
+                    {
+                        App.LogException(ex, ex.Source);
+                    }
+                    Dispatcher.Invoke(() =>
+                    {
+                        txtNewWord.Text = headword;
+                        txtNewDesc.Text = desc;
+                    });
+                }
+
+                Dispatcher.Invoke(() =>
+                {
+                    txtNewLink.Text = browser.Address;
+                    gridNewWordDetails.Show();
+                    gridNewWordLoading.Hide();
+                    btnNewWordPanel.IsEnabled = true;
+                });
+
+            }
+            lastWordUrl = browser.Address;
+        }
+
+        private void btnWordLists_Click(object sender, RoutedEventArgs e)
+        {
+            snackbarMain.MessageQueue.Enqueue("Coming soon!");
+        }
+
+        private void txtNewWord_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            bool valid = txtNewWord.Text.Length > 0 && SelectedWordList != null;
+            btnAddWord.IsEnabled = valid;
+            if (valid)
+            {
+                if (SelectedWordList.WordList.Entries.Select(x => x.Word.Trim().ToLower()).Contains(txtNewWord.Text.Trim().ToLower()))
+                {
+                    lblDuplicateWord.Show();
+                }
+                else
+                {
+                    lblDuplicateWord.Hide(false);
+                }
+            }
+            else
+            {
+                lblDuplicateWord.Hide(false);
+            }
+        }
+
+        private void btnNewListSave_Click(object sender, RoutedEventArgs e)
+        {
+            if (!WordlistNameValidationRule.ValidateWordlistName(txtNewListName.Text, CultureInfo.InvariantCulture).IsValid)
+            {
+                txtNewListName.Focus();
+                Keyboard.Focus(txtNewListName);
+                txtNewListName.SelectAll();
+                return;
+            }
+            string listname = txtNewListName.Text;
+            PathWordListPair wordlistPair = new PathWordListPair(Path.Combine(persistentPath, $"Word Lists\\{listname}.xml"), new WordList() { Name = listname, Created = DateTime.Now });
+            WordListManager.WordLists.Add(wordlistPair);
+            WordListManager.SaveList(wordlistPair);
+            dialogHost.IsOpen = false;
+        }
+
+        private void btnNewList_Click(object sender, RoutedEventArgs e)
+        {
+            drawerHost.IsBottomDrawerOpen = true;
+        }
+
+        private void btnAddWord_Click(object sender, RoutedEventArgs e)
+        {
+            if (SelectedWordList == null || string.IsNullOrWhiteSpace(txtNewWord.Text)) return;
+            SelectedWordList.WordList.Entries.Add(new WordEntry() { Word = txtNewWord.Text, Description = txtNewDesc.Text, Created = DateTime.Now, LastModified = DateTime.Now, Url = txtNewLink.Text });
+            WordListManager.SaveList(SelectedWordList);
+            snackbarMain.MessageQueue.Enqueue($"{txtNewWord.Text} saved");
+            ShowNewWordPanel = false;
+            txtNewWord.Clear();
+            txtNewLink.Clear();
+            txtNewDesc.Clear();
+        }
+
+        private void listWordListSelector_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            bool valid = txtNewWord.Text.Length > 0 && SelectedWordList != null;
+            btnAddWord.IsEnabled = valid;
+            if (valid)
+            {
+                if (SelectedWordList.WordList.Entries.Select(x => x.Word.Trim().ToLower()).Contains(txtNewWord.Text.Trim().ToLower()))
+                {
+                    lblDuplicateWord.Show();
+                }
+                else
+                {
+                    lblDuplicateWord.Hide(false);
+                }
+            }
+            else
+            {
+                lblDuplicateWord.Hide(false);
+            }
+            if (SelectedWordList != null)
+                drawerHost.IsBottomDrawerOpen = false;
+        }
+    }
+
+    public class WordlistNameValidationRule : ValidationRule
+    {
+        public static ValidationResult ValidateWordlistName(object value, CultureInfo cultureInfo)
+        {
+            string val = value as string;
+            val = val.Trim().ToLower();
+            if (string.IsNullOrWhiteSpace(val))
+                return new ValidationResult(false, "Name cannot be empty");
+            if (WordListManager.WordLists.Select(x => x.WordList.Name.ToLower()).Contains(val))
+                return new ValidationResult(false, "This list exists already");
+            if (val.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0)
+                return new ValidationResult(false, "Invalid character");
+            return ValidationResult.ValidResult;
+        }
+
+        public override ValidationResult Validate(object value, CultureInfo cultureInfo)
+        {
+            return ValidateWordlistName(value, cultureInfo);
         }
     }
 
@@ -451,6 +658,10 @@ namespace QuickDictionary
 
         // Function to validate a query given the query url
         public Func<string, Task<bool>> ValidateQuery { get; set; }
+
+        public Func<ChromiumWebBrowser, Task<string>> GetWord { get; set; }
+
+        public Func<ChromiumWebBrowser, Task<string>> GetDescription { get; set; }
 
         // Pack icon in toolbar
         public PackIconKind Icon { get; set; }
@@ -495,6 +706,18 @@ namespace QuickDictionary
             {
                 return !(await Helper.GetFinalRedirectAsync(url)).Contains("spellcheck");
             },
+            GetWord = async (browser) =>
+            {
+                var headword = await browser.GetInnerTextByXPath(@"//span[contains(@class,""headword"")]");
+                if (!string.IsNullOrWhiteSpace(headword))
+                    return headword;
+                headword = Regex.Match(browser.Address, @"dictionary\.cambridge\.org\/dictionary\/[\w-_]+\/([\w_-]+)").Groups[1].Value;
+                return headword;
+            },
+            GetDescription = async (browser) =>
+            {
+                return await browser.GetInnerTextByXPath(@"//div[contains(@class,""def ddef_d"")]");
+            },
             Icon = PackIconKind.LetterCBox,
             Name = "Cambridge English-Chinese Dictionary",
         };
@@ -516,6 +739,18 @@ namespace QuickDictionary
                 if (failNode2 != null) return false;
                 return true;
             },
+            GetWord = async (browser) =>
+            {
+                var headword = await browser.GetInnerTextByXPath(@"//h1[contains(@class,""hword"")]");
+                if (!string.IsNullOrWhiteSpace(headword))
+                    return headword;
+                headword = Regex.Match(browser.Address, @"www\.merriam-webster\.com\/[\w-_]+\/([\w_-]+)").Groups[1].Value;
+                return headword;
+            },
+            GetDescription = async (browser) =>
+            {
+                return await browser.GetInnerTextByXPath(@"//span[@class=""dtText""]");
+            },
             Icon = PackIconKind.MedicalBag,
             Name = "Merriam-Webster Medical Dictionary",
         };
@@ -526,6 +761,21 @@ namespace QuickDictionary
             ValidateQuery = async (url) =>
             {
                 return !(await Helper.GetFinalRedirectAsync(url)).Contains("spellcheck");
+            },
+            GetWord = async (browser) =>
+            {
+                var headword = await browser.GetInnerTextByXPath(@"//h1[@class=""headword""]");
+                if (!string.IsNullOrWhiteSpace(headword))
+                    return headword;
+                headword = await browser.GetInnerTextByXPath(@"//h2[@class=""h""]");
+                if (!string.IsNullOrWhiteSpace(headword))
+                    return headword;
+                headword = Regex.Match(browser.Address, @"www\.oxfordlearnersdictionaries\.com\/definition\/[\w-_]+\/([\w_-]+)").Groups[1].Value;
+                return headword;
+            },
+            GetDescription = async (browser) =>
+            {
+                return await browser.GetInnerTextByXPath(@"//span[@class=""def""]");
             },
             Icon = PackIconKind.LetterOBox,
             Name = "Oxford Advanced Learner's Dictionary",
@@ -538,6 +788,18 @@ namespace QuickDictionary
             {
                 return !(await Helper.GetFinalRedirectAsync(url)).Contains("misspelling");
             },
+            GetWord = async (browser) =>
+            {
+                var headword = await browser.GetInnerTextByXPath(@"//h1[@class=""css-1jzk4d9 e1rg2mtf8""]");
+                if (!string.IsNullOrWhiteSpace(headword))
+                    return headword;
+                headword = Regex.Match(browser.Address, @"www\.dictionary\.com\/definition\/[\w-_]+\/([\w_-]+)").Groups[1].Value;
+                return headword;
+            },
+            GetDescription = async (browser) =>
+            {
+                return await browser.GetInnerTextByXPath(@"//div[@class=""css-1ghs5zt e1q3nk1v3""]");
+            },
             Icon = PackIconKind.LetterDBox,
             Name = "Dictionary.com",
         };
@@ -548,6 +810,14 @@ namespace QuickDictionary
             ValidateQuery = async (url) =>
             {
                 return true;
+            },
+            GetWord = async (browser) =>
+            {
+                return null;
+            },
+            GetDescription = async (browser) =>
+            {
+                return null;
             },
             Icon = PackIconKind.Google,
             Name = "Google Dictionary",

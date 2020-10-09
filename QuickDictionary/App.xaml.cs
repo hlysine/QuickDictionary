@@ -51,38 +51,38 @@ namespace QuickDictionary
         private void SetupExceptionHandling()
         {
             AppDomain.CurrentDomain.UnhandledException += (s, e) =>
-                LogUnhandledException((Exception)e.ExceptionObject, "AppDomain.CurrentDomain.UnhandledException");
+                LogException((Exception)e.ExceptionObject, "AppDomain.CurrentDomain.UnhandledException");
 
             DispatcherUnhandledException += (s, e) =>
             {
-                LogUnhandledException(e.Exception, "Application.Current.DispatcherUnhandledException");
+                LogException(e.Exception, "Application.Current.DispatcherUnhandledException");
                 e.Handled = true;
             };
 
             TaskScheduler.UnobservedTaskException += (s, e) =>
             {
-                LogUnhandledException(e.Exception, "TaskScheduler.UnobservedTaskException");
+                LogException(e.Exception, "TaskScheduler.UnobservedTaskException");
                 e.SetObserved();
             };
         }
 
-        public static void LogUnhandledException(Exception exception, string source)
+        public static void LogException(Exception exception, string source)
         {
             StringBuilder message = new StringBuilder();
-            message.AppendLine($"[{DateTime.Now:R}] Unhandled exception ({source})");
+            message.AppendLine($"[{DateTime.Now:R}] Exception ({source})");
             try
             {
                 System.Reflection.AssemblyName assemblyName = System.Reflection.Assembly.GetExecutingAssembly().GetName();
                 message.AppendLine($" in {assemblyName.Name} v{assemblyName.Version}");
+                message.AppendLine(exception.Message);
+                message.AppendLine(exception.StackTrace);
+                message.AppendLine();
+                message.AppendLine();
+                File.AppendAllText(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "QuickDictionary\\log.txt"), message.ToString());
             }
             catch (Exception ex)
             {
             }
-            message.AppendLine(exception.Message);
-            message.AppendLine(exception.StackTrace);
-            message.AppendLine();
-            message.AppendLine();
-            File.AppendAllText(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "QuickDictionary\\log.txt"), message.ToString());
         }
     }
 }

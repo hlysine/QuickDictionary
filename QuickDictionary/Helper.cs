@@ -1,6 +1,11 @@
-﻿using System;
+﻿using CefSharp;
+using CefSharp.Wpf;
+using System;
+using System.CodeDom;
+using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
@@ -24,6 +29,32 @@ namespace QuickDictionary
                 {
                     HideBoundingBox(child);
                 }
+            }
+        }
+
+        public static string ToJSLiteral(this string input)
+        {
+            using (var writer = new StringWriter())
+            {
+                using (var provider = CodeDomProvider.CreateProvider("JScript"))
+                {
+                    provider.GenerateCodeFromExpression(new CodePrimitiveExpression(input), writer, null);
+                    string tmp = writer.ToString();
+                    return writer.ToString();
+                }
+            }
+        }
+
+        public static async Task<string> GetInnerTextByXPath(this ChromiumWebBrowser browser, string xpath)
+        {
+            var result = await browser.EvaluateScriptAsync(@"(function() { return document.evaluate(" + xpath.ToJSLiteral() + @", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue.innerText; })();");
+            if (result.Success)
+            {
+                return result.Result as string;
+            }
+            else
+            {
+                return null;
             }
         }
 

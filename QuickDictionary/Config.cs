@@ -11,5 +11,6 @@ namespace QuickDictionary
         public List<string> SelectedDictionaries { get; set; } = new List<string>();
         public bool AlwaysOnTop { get; set; } = false;
         public bool PauseClipboard { get; set; } = false;
+        public string LastWordListName { get; set; } = null;
     }
 }
