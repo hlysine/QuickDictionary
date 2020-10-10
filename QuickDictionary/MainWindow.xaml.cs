@@ -112,6 +112,8 @@ namespace QuickDictionary
         {
             InitializeComponent();
             Helper.HideBoundingBox(root);
+
+            browser.RequestHandler = new AdBlockRequestHandler();
         }
 
         List<OCRWord> OCRWords = new List<OCRWord>();
@@ -302,16 +304,8 @@ namespace QuickDictionary
             Title = "Quick Dictionary v" + System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString();
             title = Title;
 
-            browser.RequestHandler = new AdBlockRequestHandler();
-
-            await Helper.WaitUntil(() => browser.IsBrowserInitialized);
-
-            // Initialize the clipboard now that we have a window source to use
-            var windowClipboardManager = new ClipboardManager(this);
-            windowClipboardManager.ClipboardChanged += ClipboardChanged;
-
             WebClient client = new WebClient();
-            Stream stream = client.OpenRead("https://raw.githubusercontent.com/anudeepND/blacklist/master/adservers.txt");
+            Stream stream = await client.OpenReadTaskAsync("https://raw.githubusercontent.com/anudeepND/blacklist/master/adservers.txt");
             StreamReader reader = new StreamReader(stream);
             string content = reader.ReadToEnd();
             var matches = Regex.Matches(content, @"0\.0\.0\.0 (.+)");
@@ -319,6 +313,12 @@ namespace QuickDictionary
             {
                 Adhosts.Add(match.Groups[1].Value);
             }
+
+            await Helper.WaitUntil(() => browser.IsBrowserInitialized);
+
+            // Initialize the clipboard now that we have a window source to use
+            var windowClipboardManager = new ClipboardManager(this);
+            windowClipboardManager.ClipboardChanged += ClipboardChanged;
 
             try
             {
@@ -431,6 +431,24 @@ namespace QuickDictionary
                 bool block = Adhosts.Exists(x => request.Url.Contains(x));
                 if (block) Console.WriteLine("BLOCKED: " + request.Url);
                 return block;
+            }
+
+            protected override IResourceRequestHandler GetResourceRequestHandler(IWebBrowser chromiumWebBrowser, IBrowser browser, IFrame frame, IRequest request, bool isNavigation, bool isDownload, string requestInitiator, ref bool disableDefaultHandling)
+            {
+                bool block = Adhosts.Exists(x => request.Url.Contains(x));
+                if (block) Console.WriteLine("BLOCKED: " + request.Url);
+                if (block)
+                    return new AdBlockResourceRequestHandler();
+                else
+                    return null;
+            }
+        }
+
+        public class AdBlockResourceRequestHandler : ResourceRequestHandler
+        {
+            protected override CefReturnValue OnBeforeResourceLoad(IWebBrowser chromiumWebBrowser, IBrowser browser, IFrame frame, IRequest request, IRequestCallback callback)
+            {
+                return CefReturnValue.Cancel;
             }
         }
 

@@ -20,15 +20,9 @@ namespace QuickDictionary
     {
         public App()
         {
-            ////Add Custom assembly resolver
-            //AppDomain.CurrentDomain.AssemblyResolve += Resolver;
-
-            ////Any CefSharp references have to be in another method with NonInlining
-            //// attribute so the assembly rolver has time to do it's thing.
-            //InitializeCefSharp();
             var settings = new CefSettings();
 
-            settings.CachePath = Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "data\\cache");
+            settings.CachePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "QuickDictionary\\cache");
             settings.PersistUserPreferences = true;
             settings.PersistSessionCookies = true;
 
