@@ -5,11 +5,285 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:local="clr-namespace:QuickDictionary"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
     mc:Ignorable="d"
-    Title="WordLists"
+    Name="WordListsWindow"
+    Title="Word List Manager"
     Height="450"
-    Width="800">
-    <Grid>
+    Width="800"
+    Topmost="{Binding IsSelected, ElementName=checkTopmost}"
+    DataContext="{Binding RelativeSource={RelativeSource Self}}"
+    Closing="WordListsWindow_Closing">
+    <Grid
+        Name="root">
+        <materialDesign:DialogHost
+            Name="dialogHost"
+            VerticalAlignment="Stretch">
+            <materialDesign:DialogHost.DialogContent>
+                <Grid
+                    Margin="8">
+                    <Grid.RowDefinitions>
+                        <RowDefinition
+                            Height="Auto" />
+                        <RowDefinition
+                            Height="Auto" />
+                        <RowDefinition
+                            Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <TextBlock
+                        Style="{StaticResource MaterialDesignHeadline6TextBlock}"
+                        HorizontalAlignment="Left"
+                        Margin="5"
+                        TextWrapping="Wrap">
+                        Rename word list
+                    </TextBlock>
+                    <TextBox
+                        Name="txtRenameListName"
+                        Grid.Row="1"
+                        Margin="5"
+                        materialDesign:HintAssist.Hint="New name">
+                        <TextBox.Text>
+                            <Binding
+                                Path="RenameListName"
+                                Mode="TwoWay"
+                                UpdateSourceTrigger="PropertyChanged"
+                                ValidatesOnNotifyDataErrors="True"
+                                ValidatesOnDataErrors="True"
+                                NotifyOnValidationError="True">
+                                <Binding.ValidationRules>
+                                    <local:WordlistNameValidationRule
+                                        ValidatesOnTargetUpdated="False" />
+                                </Binding.ValidationRules>
+                            </Binding>
+                        </TextBox.Text>
+                    </TextBox>
+                    <StackPanel
+                        Grid.Row="2"
+                        Orientation="Horizontal"
+                        HorizontalAlignment="Right">
+                        <Button
+                            Name="btnRenameListCancel"
+                            Margin="5"
+                            Style="{StaticResource MaterialDesignFlatButton}"
+                            Click="btnRenameListCancel_Click">
+                            CANCEL
+                        </Button>
+                        <Button
+                            Name="btnRenameListSave"
+                            Margin="5"
+                            Style="{StaticResource MaterialDesignFlatButton}"
+                            Click="btnRenameListSave_Click">
+                            SAVE
+                        </Button>
+                    </StackPanel>
+                </Grid>
+            </materialDesign:DialogHost.DialogContent>
+            <materialDesign:DrawerHost>
+                <materialDesign:DrawerHost.LeftDrawerContent>
+                    <Grid
+                        MinWidth="200">
+                        <Grid.RowDefinitions>
+                            <RowDefinition
+                                Height="Auto" />
+                            <RowDefinition
+                                Height="*" />
+                            <RowDefinition
+                                Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition
+                                    Width="*" />
+                                <ColumnDefinition
+                                    Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock
+                                Margin="10"
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Center"
+                                Style="{DynamicResource MaterialDesignHeadline6TextBlock}">
+                            Word Lists
+                            </TextBlock>
+                            <ToggleButton
+                                Grid.Column="1"
+                                Margin="10"
+                                Style="{StaticResource MaterialDesignFlatPrimaryToggleButton}"
+                                ToolTip="Edit word lists"
+                                VerticalAlignment="Center"
+                                IsChecked="{Binding EditLists, Mode=TwoWay}">
+                                <materialDesign:PackIcon
+                                    Kind="Edit"
+                                    Height="21"
+                                    Width="21" />
+                            </ToggleButton>
+                        </Grid>
+                        <ListBox
+                            Name="listWordLists"
+                            Grid.Row="1"
+                            Margin="0 5 0 5"
+                            SelectedItem="{Binding SelectedWordList, Mode=TwoWay}">
+                            <ListBox.ItemContainerStyle>
+                                <Style
+                                    TargetType="ListBoxItem"
+                                    BasedOn="{StaticResource MaterialDesignListBoxItem}">
+                                    <Style.Setters>
+                                        <Setter
+                                            Property="HorizontalContentAlignment"
+                                            Value="Stretch" />
+                                        <Setter
+                                            Property="VerticalContentAlignment"
+                                            Value="Stretch" />
+                                    </Style.Setters>
+                                </Style>
+                            </ListBox.ItemContainerStyle>
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <local:WordListItem
+                                        EditLists="{Binding EditLists, RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}"
+                                        DeleteList="WordListItem_DeleteList"
+                                        RenameList="WordListItem_RenameList" />
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                        <materialDesign:Snackbar
+                            Grid.Row="2"
+                            HorizontalAlignment="Stretch"
+                            x:Name="snackbar"
+                            MessageQueue="{materialDesign:MessageQueue}">
+                        </materialDesign:Snackbar>
+                    </Grid>
+                </materialDesign:DrawerHost.LeftDrawerContent>
+                <Grid
+                    Name="listView"
+                    DataContext="{Binding SelectedWordList}">
+                    <Grid.RowDefinitions>
+                        <RowDefinition
+                            Height="Auto" />
+                        <RowDefinition
+                            Height="*" />
+                    </Grid.RowDefinitions>
+                    <ToolBarTray>
+                        <ToolBar
+                            Style="{DynamicResource MaterialDesignToolBar}"
+                            ClipToBounds="False">
+                            <Button
+                                Name="btnMenu"
+                                Command="{x:Static materialDesign:DrawerHost.OpenDrawerCommand}"
+                                CommandParameter="{x:Static Dock.Left}"
+                                ToolBar.OverflowMode="AsNeeded">
+                                <materialDesign:PackIcon
+                                    Kind="Menu" />
+                            </Button>
+                            <StackPanel
+                                ToolBar.OverflowMode="AsNeeded"
+                                Orientation="Vertical"
+                                VerticalAlignment="Center"
+                                Margin="5 0 5 0">
+                                <TextBlock
+                                    Margin="0 0 0 4"
+                                    Style="{DynamicResource MaterialDesignBody1TextBlock}"
+                                    Text="{Binding WordList.Name}">
+                                </TextBlock>
+                                <TextBlock>
+                                    <TextBlock.Text>
+                                        <MultiBinding
+                                            StringFormat="{}{0}  -  {1} entries">
+                                            <Binding
+                                                Path="WordList.CreatedString" />
+                                            <Binding
+                                                Path="WordList.Entries.Count" />
+                                        </MultiBinding>
+                                    </TextBlock.Text>
+                                </TextBlock>
+                            </StackPanel>
+                            <Separator />
+                            <ListBox
+                                ToolBar.OverflowMode="AsNeeded">
+                                <ListBoxItem
+                                    ToolTip="Enable flashcard mode"
+                                    IsSelected="{Binding WordList.FlashcardMode, Mode=TwoWay}">
+                                    <materialDesign:PackIcon
+                                        Kind="CardText" />
+                                </ListBoxItem>
+                            </ListBox>
+                            <Separator />
+                            <Button
+                                Name="btnFlipToFront"
+                                ToolTip="Flip all to front"
+                                Click="btnFlipToFront_Click"
+                                ToolBar.OverflowMode="AsNeeded"
+                                IsEnabled="{Binding WordList.FlashcardMode}">
+                                <materialDesign:PackIcon
+                                    Kind="FlipToFront" />
+                            </Button>
+                            <Button
+                                Name="btnFlipToBack"
+                                ToolTip="Flip all to back"
+                                Click="btnFlipToBack_Click"
+                                ToolBar.OverflowMode="AsNeeded"
+                                IsEnabled="{Binding WordList.FlashcardMode}">
+                                <materialDesign:PackIcon
+                                    Kind="FlipToBack" />
+                            </Button>
+                            <Separator />
+                            <ListBox
+                                ToolBar.OverflowMode="AsNeeded"
+                                SelectionChanged="check_SelectionChanged">
+                                <ListBoxItem
+                                    Name="checkTopmost"
+                                    Padding="0"
+                                    ToolTip="Always on top">
+                                    <materialDesign:PackIcon
+                                        Kind="PictureInPictureTopRight" />
+                                </ListBoxItem>
+                            </ListBox>
+                        </ToolBar>
+                    </ToolBarTray>
+                    <ItemsControl
+                        Grid.Row="1"
+                        Name="listCards"
+                        ItemsSource="{Binding WordList.Entries}"
+                        VirtualizingPanel.ScrollUnit="Pixel">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <local:WordCard
+                                    FlashcardFlipped="{Binding FlashcardFlipped, Mode=TwoWay}"
+                                    FlashcardMode="{Binding DataContext.WordList.FlashcardMode, RelativeSource={RelativeSource FindAncestor, AncestorType=ItemsControl}}"
+                                    WordEdited="WordCard_WordEdited"
+                                    DeleteWord="WordCard_DeleteWord" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
 
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <VirtualizingStackPanel
+                                    IsVirtualizing="True"
+                                    ScrollUnit="Pixel"
+                                    VirtualizationMode="Recycling" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+
+                        <ItemsControl.Template>
+                            <ControlTemplate
+                                TargetType="ItemsControl">
+                                <Border
+                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                    Background="{TemplateBinding Background}">
+                                    <ScrollViewer
+                                        CanContentScroll="True"
+                                        Padding="{TemplateBinding Padding}"
+                                        VirtualizingPanel.ScrollUnit="Pixel"
+                                        Focusable="False">
+                                        <ItemsPresenter />
+                                    </ScrollViewer>
+                                </Border>
+                            </ControlTemplate>
+                        </ItemsControl.Template>
+                    </ItemsControl>
+                </Grid>
+
+            </materialDesign:DrawerHost>
+        </materialDesign:DialogHost>
     </Grid>
 </Window>

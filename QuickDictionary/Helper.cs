@@ -1,13 +1,16 @@
 ﻿using CefSharp;
 using CefSharp.Wpf;
+using MoreLinq;
 using System;
 using System.CodeDom;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -163,7 +166,7 @@ namespace QuickDictionary
                     // Return the last known good URL
                     return newUrl;
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     return null;
                 }
@@ -175,6 +178,23 @@ namespace QuickDictionary
             } while (maxRedirCount-- > 0);
 
             return newUrl;
+        }
+    }
+
+    public class NotifyPropertyChanged : INotifyPropertyChanged
+    {
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        protected void SetAndNotify<T>(ref T field, T value, [CallerMemberName] string propertyName = null, IEnumerable<string> calculatedProperties = null)
+        {
+            field = value;
+            Notify(propertyName);
+            calculatedProperties?.ForEach(x => Notify(x));
+        }
+
+        protected void Notify(string propertyName)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
     }
 }

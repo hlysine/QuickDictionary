@@ -3,7 +3,9 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:QuickDictionary"
              StartupUri="MainWindow.xaml"
-             Startup="Application_Startup">
+             Startup="Application_Startup"
+             ShutdownMode="OnLastWindowClose"
+             Exit="Application_Exit">
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
@@ -16,6 +18,71 @@
                 <ResourceDictionary
                     Source="pack://application:,,,/MaterialDesignColors;component/Themes/Recommended/Accent/MaterialDesignColor.Lime.xaml" />
             </ResourceDictionary.MergedDictionaries>
+
+            <Style
+                TargetType="FrameworkElement"
+                x:Key="VisibleAnimation">
+                <Style.Triggers>
+                    <Trigger
+                        Property="Visibility"
+                        Value="Visible">
+                        <Trigger.EnterActions>
+                            <BeginStoryboard>
+                                <Storyboard>
+                                    <DoubleAnimation
+                                        Storyboard.TargetProperty="Opacity"
+                                        From="0.0"
+                                        To="1.0"
+                                        Duration="0:0:0.2" />
+                                </Storyboard>
+                            </BeginStoryboard>
+                        </Trigger.EnterActions>
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
+            
+            <local:BoolToVisibilityConverter
+                x:Key="BoolToVisibilityConverter" />
+
+            <local:BoolToHVisibilityConverter
+                x:Key="BoolToHVisibilityConverter" />
+
+            <local:BoolInverseConverter
+                x:Key="BoolInverseConverter" />
+
+            <Storyboard
+                x:Key="shakeStoryboard">
+                <!--<DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)">-->
+                <DoubleAnimationUsingKeyFrames
+                    Storyboard.TargetName="mainWindow"
+                    Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
+                    FillBehavior="Stop">
+                    <SplineDoubleKeyFrame
+                        KeyTime="00:00:00.0500000"
+                        Value="-10" />
+                    <SplineDoubleKeyFrame
+                        KeyTime="00:00:00.1000000"
+                        Value="0" />
+                    <SplineDoubleKeyFrame
+                        KeyTime="00:00:00.1500000"
+                        Value="10" />
+                    <SplineDoubleKeyFrame
+                        KeyTime="00:00:00.2000000"
+                        Value="0" />
+                    <SplineDoubleKeyFrame
+                        KeyTime="00:00:00.2500000"
+                        Value="-10" />
+                    <SplineDoubleKeyFrame
+                        KeyTime="00:00:00.3000000"
+                        Value="0" />
+                    <SplineDoubleKeyFrame
+                        KeyTime="00:00:00.3500000"
+                        Value="10" />
+                    <SplineDoubleKeyFrame
+                        KeyTime="00:00:00.4000000"
+                        Value="0" />
+                </DoubleAnimationUsingKeyFrames >
+            </Storyboard >
         </ResourceDictionary>
     </Application.Resources>
 </Application>

@@ -21,45 +21,8 @@
     Name="mainWindow"
     DataContext="{Binding RelativeSource={RelativeSource Self}}"
     SourceInitialized="Window_SourceInitialized"
-    Topmost="{Binding IsChecked, ElementName=checkTopmost}"
+    Topmost="{Binding IsSelected, ElementName=checkTopmost}"
     Closing="mainWindow_Closing">
-    <Window.Resources>
-        <local:BoolToVisibilityConverter
-            x:Key="BoolToVisibilityConverter" />
-        <Storyboard
-            x:Key="shakeStoryboard">
-            <!--<DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)">-->
-            <DoubleAnimationUsingKeyFrames
-                Storyboard.TargetName="mainWindow"
-                Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
-                FillBehavior="Stop">
-                <SplineDoubleKeyFrame
-                    KeyTime="00:00:00.0500000"
-                    Value="-10" />
-                <SplineDoubleKeyFrame
-                    KeyTime="00:00:00.1000000"
-                    Value="0" />
-                <SplineDoubleKeyFrame
-                    KeyTime="00:00:00.1500000"
-                    Value="10" />
-                <SplineDoubleKeyFrame
-                    KeyTime="00:00:00.2000000"
-                    Value="0" />
-                <SplineDoubleKeyFrame
-                    KeyTime="00:00:00.2500000"
-                    Value="-10" />
-                <SplineDoubleKeyFrame
-                    KeyTime="00:00:00.3000000"
-                    Value="0" />
-                <SplineDoubleKeyFrame
-                    KeyTime="00:00:00.3500000"
-                    Value="10" />
-                <SplineDoubleKeyFrame
-                    KeyTime="00:00:00.4000000"
-                    Value="0" />
-            </DoubleAnimationUsingKeyFrames >
-        </Storyboard >
-    </Window.Resources>
     <Window.RenderTransform>
         <TranslateTransform
             Y="0"
@@ -94,7 +57,6 @@
                         Grid.Row="1"
                         Margin="5"
                         materialDesign:HintAssist.Hint="Name of word list">
-
                         <TextBox.Text>
                             <Binding
                                 Path="NewListName"
@@ -279,36 +241,38 @@
                                     Kind="Show" />
                             </Button>
                         </Grid>
-                        <ScrollViewer
-                            Name="scrollToolbar"
+                        <ToolBarTray
                             Grid.Row="1"
-                            HorizontalAlignment="Stretch"
-                            CanContentScroll="False"
-                            HorizontalScrollBarVisibility="Hidden"
-                            VerticalScrollBarVisibility="Disabled"
-                            PreviewMouseWheel="ScrollViewer_PreviewMouseWheel">
-                            <StackPanel
-                                Margin="5"
-                                Orientation="Horizontal">
-                                <CheckBox
-                                    Name="checkPause"
-                                    Margin="5 0 0 0"
-                                    Style="{StaticResource MaterialDesignCheckBox}"
-                                    ToolTip="Stop looking up words in the clipboard"
-                                    Checked="check_Checked"
-                                    Unchecked="check_Checked">
-                                    Pause
-                                </CheckBox>
-                                <CheckBox
-                                    Name="checkTopmost"
-                                    Margin="5 0 0 0"
-                                    Style="{StaticResource MaterialDesignCheckBox}"
-                                    Checked="check_Checked"
-                                    Unchecked="check_Checked">
-                                    Always on top
-                                </CheckBox>
+                            Height="40">
+                            <ToolBar
+                                Height="40"
+                                Style="{DynamicResource MaterialDesignToolBar}"
+                                ClipToBounds="False">
+                                <ListBox
+                                    ToolBar.OverflowMode="AsNeeded"
+                                    SelectionChanged="check_SelectionChanged">
+                                    <ListBoxItem
+                                        Name="checkPause"
+                                        Padding="0"
+                                        ToolTip="Stop looking up words in the clipboard">
+                                        <materialDesign:PackIcon
+                                            Kind="Pause" />
+                                    </ListBoxItem>
+                                </ListBox>
+                                <ListBox
+                                    ToolBar.OverflowMode="AsNeeded"
+                                    SelectionChanged="check_SelectionChanged">
+                                    <ListBoxItem
+                                        Name="checkTopmost"
+                                        Padding="0"
+                                        ToolTip="Always on top">
+                                        <materialDesign:PackIcon
+                                            Kind="PictureInPictureTopRight" />
+                                    </ListBoxItem>
+                                </ListBox>
                                 <ListBox
                                     x:Name="listDictionaries"
+                                    ToolBar.OverflowMode="AsNeeded"
                                     Margin="5 0 0 0"
                                     SelectionMode="Extended"
                                     Style="{StaticResource MaterialDesignToolToggleFlatListBox}"
@@ -325,8 +289,8 @@
                                         </DataTemplate>
                                     </ListBox.ItemTemplate>
                                 </ListBox>
-                            </StackPanel>
-                        </ScrollViewer>
+                            </ToolBar>
+                        </ToolBarTray>
                         <cefSharp:ChromiumWebBrowser
                             Name="browser"
                             Grid.Row="2"
@@ -488,13 +452,13 @@
                     Margin="5"
                     Style="{StaticResource MaterialDesignHeadline6TextBlock}"
                     TextWrapping="Wrap">
-          Quick Dictionary is updating
+                    Quick Dictionary is updating
                 </TextBlock>
                 <TextBlock
                     Margin="5"
                     Style="{StaticResource MaterialDesignBody2TextBlock}"
                     TextWrapping="Wrap">
-          The app will close automatically once the update is done
+                    This window will close automatically once the update is done
                 </TextBlock>
                 <Grid
                     Margin="5"

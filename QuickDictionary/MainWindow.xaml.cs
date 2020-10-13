@@ -41,6 +41,8 @@ namespace QuickDictionary
     {
         private KeyboardHook keyHook = new KeyboardHook();
 
+        private WordLists wordListWindow = null;
+
         TesseractEngine engine = new TesseractEngine("data/tessdata", "eng", EngineMode.LstmOnly);
         bool engineBusy = true;
 
@@ -88,7 +90,7 @@ namespace QuickDictionary
             }
         }
 
-        PathWordListPair selectedWordList = null;
+        private PathWordListPair selectedWordList;
         public PathWordListPair SelectedWordList
         {
             get
@@ -102,7 +104,7 @@ namespace QuickDictionary
             }
         }
 
-        private string persistentPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "QuickDictionary");
+        public static string PersistentPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "QuickDictionary");
 
         private bool stopSelectionUpdate = false;
 
@@ -222,60 +224,34 @@ namespace QuickDictionary
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        private ObservableCollection<Dictionary> dictionaries = new ObservableCollection<Dictionary>();
+        public static ObservableCollection<Dictionary> Dictionaries = new ObservableCollection<Dictionary>();
         public static List<string> Adhosts = new List<string>();
 
-        public Config Config;
-
-        private void saveConfig()
-        {
-            using (FileStream fs = new FileStream(Path.Combine(persistentPath, "config.xml"), FileMode.Create))
-            {
-                XmlSerializer serializer = new XmlSerializer(typeof(Config));
-                serializer.Serialize(fs, Config);
-            }
-        }
-
-        private void loadConfig()
-        {
-            string path = Path.Combine(persistentPath, "config.xml");
-            if (File.Exists(path))
-            {
-                using (FileStream fs = new FileStream(path, FileMode.Open))
-                {
-                    XmlSerializer serializer = new XmlSerializer(typeof(Config));
-                    Config = (Config)serializer.Deserialize(fs);
-                }
-            }
-            else
-            {
-                Config = new Config();
-                Config.SelectedDictionaries = dictionaries.Select(x => x.Name).ToList();
-            }
-        }
+        public static Config Config = new Config();
 
         private async void Window_SourceInitialized(object sender, EventArgs e)
         {
             stopSelectionUpdate = true;
 
-            loadConfig();
+
+            Config.LoadConfig();
 
             await WordListManager.LoadAllLists();
 
-            dictionaries.Add(Dictionary.CambridgeCE);
-            dictionaries.Add(Dictionary.MedicalDictionary);
-            dictionaries.Add(Dictionary.OxfordLearnersDict);
-            dictionaries.Add(Dictionary.DictionaryCom);
-            dictionaries.Add(Dictionary.GoogleDefinitions);
-            listDictionaries.ItemsSource = dictionaries;
+            Dictionaries.Add(Dictionary.CambridgeCE);
+            Dictionaries.Add(Dictionary.MedicalDictionary);
+            Dictionaries.Add(Dictionary.OxfordLearnersDict);
+            Dictionaries.Add(Dictionary.DictionaryCom);
+            Dictionaries.Add(Dictionary.GoogleDefinitions);
+            listDictionaries.ItemsSource = Dictionaries;
             listDictionaries.SelectedItems.Clear();
             foreach (string dict in Config.SelectedDictionaries)
             {
-                Dictionary d = dictionaries.FirstOrDefault(x => x.Name == dict);
+                Dictionary d = Dictionaries.FirstOrDefault(x => x.Name == dict);
                 if (d != null)
                     listDictionaries.SelectedItems.Add(d);
             }
-            foreach (Dictionary dict in dictionaries)
+            foreach (Dictionary dict in Dictionaries)
             {
                 dict.Precedence = listDictionaries.SelectedItems.IndexOf(dict) + 1;
             }
@@ -284,8 +260,8 @@ namespace QuickDictionary
 
             stopSelectionUpdate = false;
 
-            checkTopmost.IsChecked = Config.AlwaysOnTop;
-            checkPause.IsChecked = Config.PauseClipboard;
+            checkTopmost.IsSelected = Config.AlwaysOnTop;
+            checkPause.IsSelected = Config.PauseClipboard;
 
             keyHook.RegisterHotKey(ModifierKeys.Alt, System.Windows.Forms.Keys.F);
             keyHook.RegisterHotKey(ModifierKeys.Alt, System.Windows.Forms.Keys.G);
@@ -294,9 +270,9 @@ namespace QuickDictionary
             engine.SetVariable("tessedit_char_whitelist", "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-' ");
             engine.SetVariable("tessedit_char_blacklist", "¢§+~»~`!@#$%^&*()_+={}[]|\\:\";<>?,./");
 
-            if (!Directory.Exists(persistentPath))
+            if (!Directory.Exists(PersistentPath))
             {
-                Directory.CreateDirectory(persistentPath);
+                Directory.CreateDirectory(PersistentPath);
             }
 
             engineBusy = false;
@@ -354,7 +330,7 @@ namespace QuickDictionary
 
         private void ClipboardChanged(object sender, EventArgs e)
         {
-            if (checkPause.IsChecked.GetValueOrDefault()) return;
+            if (checkPause.IsSelected) return;
             // Handle your clipboard update here, debug logging example:
             if (Clipboard.ContainsText())
             {
@@ -406,12 +382,12 @@ namespace QuickDictionary
         private void listDictionaries_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (stopSelectionUpdate) return;
-            foreach (Dictionary dict in dictionaries)
+            foreach (Dictionary dict in Dictionaries)
             {
                 dict.Precedence = listDictionaries.SelectedItems.IndexOf(dict) + 1;
             }
             Config.SelectedDictionaries = listDictionaries.SelectedItems.Cast<Dictionary>().Select(x => x.Name).ToList();
-            saveConfig();
+            Config.SaveConfig();
         }
 
         private void browser_LoadingStateChanged(object sender, CefSharp.LoadingStateChangedEventArgs e)
@@ -452,21 +428,14 @@ namespace QuickDictionary
             }
         }
 
-        private void ScrollViewer_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
-        {
-            if (e.Delta < 0)
-                scrollToolbar.LineRight();
-            else
-                scrollToolbar.LineLeft();
-
-            e.Handled = true;
-        }
-
         bool canExit = false;
 
         private async void mainWindow_Closing(object sender, CancelEventArgs e)
         {
-            if (canExit) return;
+            if (canExit)
+            {
+                return;
+            }
             if (updateFinished.CurrentCount <= 0)
             {
                 // Still updating
@@ -477,13 +446,6 @@ namespace QuickDictionary
                 canExit = true;
                 Close();
             }
-        }
-
-        private void check_Checked(object sender, RoutedEventArgs e)
-        {
-            Config.PauseClipboard = checkPause.IsChecked.GetValueOrDefault();
-            Config.AlwaysOnTop = checkTopmost.IsChecked.GetValueOrDefault();
-            saveConfig();
         }
 
         string lastWordUrl = null;
@@ -519,7 +481,7 @@ namespace QuickDictionary
                     btnNewWordPanel.IsEnabled = false;
                 });
 
-                var dict = dictionaries.FirstOrDefault(x => new Uri(x.Url).Host.Trim().ToLower() == new Uri(browser.Address).Host.Trim().ToLower());
+                var dict = Dictionaries.FirstOrDefault(x => new Uri(x.Url).Host.Trim().ToLower() == new Uri(browser.Address).Host.Trim().ToLower());
                 if (dict != null)
                 {
                     string headword = null;
@@ -562,7 +524,12 @@ namespace QuickDictionary
 
         private void btnWordLists_Click(object sender, RoutedEventArgs e)
         {
-            snackbarMain.MessageQueue.Enqueue("Coming soon!");
+            if (wordListWindow == null) wordListWindow = new WordLists();
+            if (!Application.Current.Windows.OfType<WordLists>().Contains(wordListWindow))
+            {
+                wordListWindow = new WordLists();
+            }
+            wordListWindow.Show();
         }
 
         private void txtNewWord_TextChanged(object sender, TextChangedEventArgs e)
@@ -596,7 +563,7 @@ namespace QuickDictionary
                 return;
             }
             string listname = txtNewListName.Text;
-            PathWordListPair wordlistPair = new PathWordListPair(Path.Combine(persistentPath, $"Word Lists\\{listname}.xml"), new WordList() { Name = listname, Created = DateTime.Now });
+            PathWordListPair wordlistPair = new PathWordListPair(Path.Combine(PersistentPath, $"Word Lists\\{listname}.xml"), new WordList() { Name = listname, Created = DateTime.Now });
             WordListManager.WordLists.Add(wordlistPair);
             WordListManager.SaveList(wordlistPair);
             dialogHost.IsOpen = false;
@@ -640,6 +607,13 @@ namespace QuickDictionary
             }
             if (SelectedWordList != null)
                 drawerHost.IsBottomDrawerOpen = false;
+        }
+
+        private void check_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            Config.PauseClipboard = checkPause.IsSelected;
+            Config.AlwaysOnTop = checkTopmost.IsSelected;
+            Config.SaveConfig();
         }
     }
 
@@ -692,7 +666,6 @@ namespace QuickDictionary
             return Name;
         }
 
-        private string precedenceString;
         public string PrecedenceString
         {
             get

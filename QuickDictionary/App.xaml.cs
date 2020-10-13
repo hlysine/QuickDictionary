@@ -74,9 +74,14 @@ namespace QuickDictionary
                 message.AppendLine();
                 File.AppendAllText(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "QuickDictionary\\log.txt"), message.ToString());
             }
-            catch (Exception ex)
+            catch (Exception)
             {
             }
+        }
+
+        private void Application_Exit(object sender, ExitEventArgs e)
+        {
+            WordListManager.CommitDeletions();
         }
     }
 }
