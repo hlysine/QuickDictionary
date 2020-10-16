@@ -188,8 +188,8 @@ namespace QuickDictionary
                 }
                 engineBusy = false;
             });
-            overlay.ShowDialog();
             Dispatcher.Invoke(() => progressLoading.Visibility = Visibility.Visible);
+            overlay.ShowDialog();
         }
 
         private void KeyHook_KeyPressed(object sender, KeyPressedEventArgs e)
@@ -242,6 +242,7 @@ namespace QuickDictionary
             Dictionaries.Add(Dictionary.MedicalDictionary);
             Dictionaries.Add(Dictionary.OxfordLearnersDict);
             Dictionaries.Add(Dictionary.DictionaryCom);
+            Dictionaries.Add(Dictionary.GoogleTranslate);
             Dictionaries.Add(Dictionary.GoogleDefinitions);
             listDictionaries.ItemsSource = Dictionaries;
             listDictionaries.SelectedItems.Clear();
@@ -351,7 +352,7 @@ namespace QuickDictionary
                     List<Task<bool>> validations = new List<Task<bool>>();
                     foreach (Dictionary dict in dicts)
                     {
-                        var task = dict.ValidateQuery(dict.Url.Replace("%s", WebUtility.UrlEncode(word)));
+                        var task = dict.ValidateQuery(dict.Url.Replace("%s", WebUtility.UrlEncode(word)), word);
                         validations.Add(task);
                     }
                     if (validations.Count > 0)
@@ -390,9 +391,31 @@ namespace QuickDictionary
             Config.SaveConfig();
         }
 
-        private void browser_LoadingStateChanged(object sender, CefSharp.LoadingStateChangedEventArgs e)
+        private async void browser_LoadingStateChanged(object sender, CefSharp.LoadingStateChangedEventArgs e)
         {
             Dispatcher.Invoke(() => progressLoading.Visibility = e.IsLoading ? Visibility.Visible : Visibility.Hidden);
+            if (e.IsLoading) return;
+            string address = null;
+            Dispatcher.Invoke(() => address = browser.Address);
+            if (string.IsNullOrWhiteSpace(address)) return;
+            var dict = Dictionaries.FirstOrDefault(x => new Uri(x.Url).Host.Trim().ToLower() == new Uri(address).Host.Trim().ToLower());
+            if (dict != null)
+            {
+                string headword = null;
+                try
+                {
+                    headword = await dict.GetWord(browser);
+                }
+                catch (Exception ex)
+                {
+                    App.LogException(ex, ex.Source);
+                }
+                if (!string.IsNullOrWhiteSpace(headword))
+                    Dispatcher.Invoke(() =>
+                    {
+                        txtWord.Text = headword;
+                    });
+            }
         }
 
         private void btnOCR_Click(object sender, RoutedEventArgs e)
@@ -524,12 +547,13 @@ namespace QuickDictionary
 
         private void btnWordLists_Click(object sender, RoutedEventArgs e)
         {
-            if (wordListWindow == null) wordListWindow = new WordLists();
+            if (wordListWindow == null) wordListWindow = new WordLists(this);
             if (!Application.Current.Windows.OfType<WordLists>().Contains(wordListWindow))
             {
-                wordListWindow = new WordLists();
+                wordListWindow = new WordLists(this);
             }
             wordListWindow.Show();
+            wordListWindow.Activate();
         }
 
         private void txtNewWord_TextChanged(object sender, TextChangedEventArgs e)
@@ -563,9 +587,12 @@ namespace QuickDictionary
                 return;
             }
             string listname = txtNewListName.Text;
-            PathWordListPair wordlistPair = new PathWordListPair(Path.Combine(PersistentPath, $"Word Lists\\{listname}.xml"), new WordList() { Name = listname, Created = DateTime.Now });
+            string path = Path.Combine(PersistentPath, $"Word Lists\\{listname}.xml");
+            PathWordListPair wordlistPair = new PathWordListPair(path, new WordList() { Name = listname, Created = DateTime.Now });
             WordListManager.WordLists.Add(wordlistPair);
             WordListManager.SaveList(wordlistPair);
+            if (WordListManager.DeletedPaths.Contains(path))
+                WordListManager.DeletedPaths.Remove(path);
             dialogHost.IsOpen = false;
         }
 
@@ -615,6 +642,20 @@ namespace QuickDictionary
             Config.AlwaysOnTop = checkTopmost.IsSelected;
             Config.SaveConfig();
         }
+
+        public void NavigateWord(WordEntry word)
+        {
+            if (!browser.IsBrowserInitialized) return;
+            progressLoading.Visibility = Visibility.Visible;
+            if (!string.IsNullOrWhiteSpace(word.Url))
+            {
+                browser.Load(word.Url);
+            }
+            else
+            {
+                search(word.Word);
+            }
+        }
     }
 
     public class WordlistNameValidationRule : ValidationRule
@@ -649,8 +690,8 @@ namespace QuickDictionary
         // Url to the dictionary with %s in place of the query
         public string Url { get; set; }
 
-        // Function to validate a query given the query url
-        public Func<string, Task<bool>> ValidateQuery { get; set; }
+        // Function to validate a query given the query url and query text
+        public Func<string, string, Task<bool>> ValidateQuery { get; set; }
 
         public Func<ChromiumWebBrowser, Task<string>> GetWord { get; set; }
 
@@ -694,7 +735,7 @@ namespace QuickDictionary
         public static Dictionary CambridgeCE = new Dictionary()
         {
             Url = "https://dictionary.cambridge.org/search/english-chinese-traditional/direct/?source=gadgets&q=%s",
-            ValidateQuery = async (url) =>
+            ValidateQuery = async (url, word) =>
             {
                 return !(await Helper.GetFinalRedirectAsync(url)).Contains("spellcheck");
             },
@@ -717,7 +758,7 @@ namespace QuickDictionary
         public static Dictionary MedicalDictionary = new Dictionary()
         {
             Url = "https://www.merriam-webster.com/medical/%s",
-            ValidateQuery = async (url) =>
+            ValidateQuery = async (url, word) =>
             {
                 var web = new HtmlWeb();
                 var doc = await web.LoadFromWebAsync(url);
@@ -750,7 +791,7 @@ namespace QuickDictionary
         public static Dictionary OxfordLearnersDict = new Dictionary()
         {
             Url = "https://www.oxfordlearnersdictionaries.com/search/english/?q=%s",
-            ValidateQuery = async (url) =>
+            ValidateQuery = async (url, word) =>
             {
                 return !(await Helper.GetFinalRedirectAsync(url)).Contains("spellcheck");
             },
@@ -776,7 +817,7 @@ namespace QuickDictionary
         public static Dictionary DictionaryCom = new Dictionary()
         {
             Url = "https://www.dictionary.com/browse/%s",
-            ValidateQuery = async (url) =>
+            ValidateQuery = async (url, word) =>
             {
                 return !(await Helper.GetFinalRedirectAsync(url)).Contains("misspelling");
             },
@@ -799,7 +840,7 @@ namespace QuickDictionary
         public static Dictionary GoogleDefinitions = new Dictionary()
         {
             Url = "https://www.google.com/search?q=define+%s",
-            ValidateQuery = async (url) =>
+            ValidateQuery = async (url, word) =>
             {
                 return true;
             },
@@ -813,6 +854,25 @@ namespace QuickDictionary
             },
             Icon = PackIconKind.Google,
             Name = "Google Dictionary",
+        };
+
+        public static Dictionary GoogleTranslate = new Dictionary()
+        {
+            Url = "https://translate.google.com/#view=home&op=translate&sl=en&tl=zh-TW&text=%s",
+            ValidateQuery = async (url, word) =>
+            {
+                return true;
+            },
+            GetWord = async (browser) =>
+            {
+                return null;
+            },
+            GetDescription = async (browser) =>
+            {
+                return await browser.GetInnerTextByXPath(@"//div[contains(@class,""text-wrap tlid-copy-target"")]");
+            },
+            Icon = PackIconKind.GoogleTranslate,
+            Name = "Google Translate",
         };
     }
 

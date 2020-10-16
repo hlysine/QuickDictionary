@@ -250,7 +250,8 @@
                                     FlashcardFlipped="{Binding FlashcardFlipped, Mode=TwoWay}"
                                     FlashcardMode="{Binding DataContext.WordList.FlashcardMode, RelativeSource={RelativeSource FindAncestor, AncestorType=ItemsControl}}"
                                     WordEdited="WordCard_WordEdited"
-                                    DeleteWord="WordCard_DeleteWord" />
+                                    DeleteWord="WordCard_DeleteWord"
+                                    NavigateWord="WordCard_NavigateWord"/>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
 
@@ -281,6 +282,11 @@
                             </ControlTemplate>
                         </ItemsControl.Template>
                     </ItemsControl>
+                    <materialDesign:Snackbar
+                        Grid.Row="1"
+                        x:Name="snackbarMain"
+                        MessageQueue="{materialDesign:MessageQueue}">
+                    </materialDesign:Snackbar>
                 </Grid>
 
             </materialDesign:DrawerHost>

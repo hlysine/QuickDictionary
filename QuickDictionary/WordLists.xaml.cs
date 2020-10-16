@@ -68,9 +68,12 @@ namespace QuickDictionary
 
         private PathWordListPair renamingList = null;
 
-        public WordLists()
+        private MainWindow mainWindow;
+
+        public WordLists(MainWindow _mainWindow)
         {
             InitializeComponent();
+            mainWindow = _mainWindow;
             Helper.HideBoundingBox(root);
             listWordLists.ItemsSource = WordListManager.WordLists;
             checkTopmost.IsSelected = MainWindow.Config.WordListManagerAlwaysOnTop;
@@ -98,7 +101,19 @@ namespace QuickDictionary
             WordEntry entry = (sender as WordCard)?.DataContext as WordEntry;
             if (entry != null)
             {
-                SelectedWordList.WordList?.Entries?.Remove(entry);
+                if (SelectedWordList.WordList == null || SelectedWordList.WordList.Entries == null) return;
+                snackbarMain.MessageQueue.Enqueue(
+                    entry.Word + " deleted",
+                    "UNDO",
+                    (obj) => {
+                        obj.SelectedWordList.WordList.Entries.Insert(obj.Item2, obj.entry);
+                        WordListManager.SaveList(obj.SelectedWordList);
+                    },
+                    (SelectedWordList, SelectedWordList.WordList.Entries.IndexOf(entry), entry),
+                    false,
+                    true,
+                    TimeSpan.FromSeconds(5));
+                SelectedWordList.WordList.Entries.Remove(entry);
                 WordListManager.SaveList(SelectedWordList);
             }
         }
@@ -168,6 +183,13 @@ namespace QuickDictionary
         {
             MainWindow.Config.WordListManagerAlwaysOnTop = checkTopmost.IsSelected;
             MainWindow.Config.SaveConfig();
+        }
+
+        private void WordCard_NavigateWord(object sender, EventArgs e)
+        {
+            WordEntry entry = (sender as WordCard)?.DataContext as WordEntry;
+            if (entry != null)
+                mainWindow.NavigateWord(entry);
         }
     }
 }

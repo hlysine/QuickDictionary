@@ -86,6 +86,7 @@ namespace QuickDictionary
 
         public event EventHandler WordEdited;
         public event EventHandler DeleteWord;
+        public event EventHandler NavigateWord;
 
         public WordCard()
         {
@@ -124,6 +125,11 @@ namespace QuickDictionary
         {
             EditMode = false;
             DeleteWord?.Invoke(this, EventArgs.Empty);
+        }
+
+        private void btnWordLink_Click(object sender, RoutedEventArgs e)
+        {
+            NavigateWord?.Invoke(this, EventArgs.Empty);
         }
     }
 

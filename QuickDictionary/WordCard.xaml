@@ -57,12 +57,23 @@
                         </Grid.ColumnDefinitions>
                         <StackPanel
                             VerticalAlignment="Center">
-                            <TextBlock
+                            <Button
+                                Name="btnWordLink"
+                                Style="{DynamicResource MaterialDesignFlatButton}"
+                                Padding="5"
+                                HorizontalContentAlignment="Stretch"
+                                VerticalContentAlignment="Stretch"
                                 HorizontalAlignment="Left"
-                                TextWrapping="Wrap"
-                                Style="{StaticResource MaterialDesignHeadline5TextBlock}"
-                                Text="{Binding Word}">
-                            </TextBlock>
+                                Height="Auto"
+                                Width="Auto"
+                                Click="btnWordLink_Click">
+                                <TextBlock
+                                    HorizontalAlignment="Left"
+                                    TextWrapping="Wrap"
+                                    Style="{StaticResource MaterialDesignHeadline5TextBlock}"
+                                    Text="{Binding Word}">
+                                </TextBlock>
+                            </Button>
                             <TextBlock
                                 Margin="16 0 16 16"
                                 VerticalAlignment="Center"

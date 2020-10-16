@@ -1,5 +1,6 @@
 ﻿using CefSharp;
 using CefSharp.Wpf;
+using Squirrel;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
@@ -20,6 +21,28 @@ namespace QuickDictionary
     {
         public App()
         {
+            try
+            {
+                using (var mgr = UpdateManager.GitHubUpdateManager("https://github.com/Henry-YSLin/QuickDictionary").Result)
+                {
+                    // Note, in most of these scenarios, the app exits after this method
+                    // completes!
+                    SquirrelAwareApp.HandleEvents(
+                      onInitialInstall: v => mgr.CreateShortcutForThisExe(),
+                      onAppUpdate: v => mgr.CreateShortcutForThisExe(),
+                      onAppUninstall: v =>
+                      {
+                          mgr.RemoveShortcutForThisExe();
+                          mgr.RemoveUninstallerRegistryEntry();
+                      },
+                      onFirstRun: () => { });
+                }
+            }
+            catch (Exception)
+            {
+
+            }
+
             var settings = new CefSettings();
 
             settings.CachePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "QuickDictionary\\cache");
