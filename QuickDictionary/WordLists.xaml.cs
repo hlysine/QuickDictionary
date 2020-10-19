@@ -129,19 +129,19 @@ namespace QuickDictionary
             PathWordListPair entry = (sender as WordListItem)?.DataContext as PathWordListPair;
             if (entry != null)
             {
-                WordListManager.WordLists.Remove(entry);
-                WordListManager.DeletedPaths.Add(entry.Path);
                 snackbar.MessageQueue.Enqueue(
                     entry.WordList.Name + " deleted", 
                     "UNDO", 
-                    (path) => { 
-                        WordListManager.WordLists.Add(new PathWordListPair(path, WordListManager.LoadList(path)));
-                        WordListManager.DeletedPaths.Remove(path);
+                    (pair) => { 
+                        WordListManager.WordLists.Insert(pair.Item1, pair.entry);
+                        WordListManager.DeletedPaths.Remove(pair.entry.Path);
                     }, 
-                    entry.Path, 
+                    (WordListManager.WordLists.IndexOf(entry), entry), 
                     false, 
                     true, 
                     TimeSpan.FromSeconds(5));
+                WordListManager.WordLists.Remove(entry);
+                WordListManager.DeletedPaths.Add(entry.Path);
             }
         }
 

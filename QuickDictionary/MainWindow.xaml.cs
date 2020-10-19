@@ -233,6 +233,8 @@ namespace QuickDictionary
         {
             stopSelectionUpdate = true;
 
+            Keyboard.Focus(txtWord);
+            txtWord.Focus();
 
             Config.LoadConfig();
 
@@ -398,7 +400,16 @@ namespace QuickDictionary
             string address = null;
             Dispatcher.Invoke(() => address = browser.Address);
             if (string.IsNullOrWhiteSpace(address)) return;
-            var dict = Dictionaries.FirstOrDefault(x => new Uri(x.Url).Host.Trim().ToLower() == new Uri(address).Host.Trim().ToLower());
+            Dictionary dict;
+            if (Uri.TryCreate(address, UriKind.RelativeOrAbsolute, out Uri uri))
+            {
+                if (uri.IsAbsoluteUri)
+                    dict = Dictionaries.FirstOrDefault(x => new Uri(x.Url).Host.Trim().ToLower() == uri.Host.Trim().ToLower());
+                else
+                    dict = null;
+            }
+            else
+                dict = null;
             if (dict != null)
             {
                 string headword = null;
@@ -504,7 +515,16 @@ namespace QuickDictionary
                     btnNewWordPanel.IsEnabled = false;
                 });
 
-                var dict = Dictionaries.FirstOrDefault(x => new Uri(x.Url).Host.Trim().ToLower() == new Uri(browser.Address).Host.Trim().ToLower());
+                Dictionary dict;
+                if (Uri.TryCreate(browser.Address, UriKind.RelativeOrAbsolute, out Uri uri))
+                {
+                    if (uri.IsAbsoluteUri)
+                        dict = Dictionaries.FirstOrDefault(x => new Uri(x.Url).Host.Trim().ToLower() == uri.Host.Trim().ToLower());
+                    else
+                        dict = null;
+                }
+                else
+                    dict = null;
                 if (dict != null)
                 {
                     string headword = null;
@@ -587,7 +607,7 @@ namespace QuickDictionary
                 return;
             }
             string listname = txtNewListName.Text;
-            string path = Path.Combine(PersistentPath, $"Word Lists\\{listname}.xml");
+            string path = Path.Combine(WordListManager.WordListPath, $"{listname}.xml");
             PathWordListPair wordlistPair = new PathWordListPair(path, new WordList() { Name = listname, Created = DateTime.Now });
             WordListManager.WordLists.Add(wordlistPair);
             WordListManager.SaveList(wordlistPair);

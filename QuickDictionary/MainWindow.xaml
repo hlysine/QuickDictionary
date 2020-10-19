@@ -254,7 +254,7 @@
                                     <ListBoxItem
                                         Name="checkPause"
                                         Padding="0"
-                                        ToolTip="Stop looking up words in the clipboard">
+                                        ToolTip="Start/Stop looking up words in the clipboard">
                                         <materialDesign:PackIcon
                                             Kind="Pause" />
                                     </ListBoxItem>

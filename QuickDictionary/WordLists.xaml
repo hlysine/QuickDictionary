@@ -200,7 +200,7 @@
                             <ListBox
                                 ToolBar.OverflowMode="AsNeeded">
                                 <ListBoxItem
-                                    ToolTip="Enable flashcard mode"
+                                    ToolTip="Toggle flashcard mode"
                                     IsSelected="{Binding WordList.FlashcardMode, Mode=TwoWay}">
                                     <materialDesign:PackIcon
                                         Kind="CardText" />

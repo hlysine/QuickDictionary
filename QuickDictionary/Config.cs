@@ -15,6 +15,7 @@ namespace QuickDictionary
         public bool WordListManagerAlwaysOnTop { get; set; } = false;
         public bool PauseClipboard { get; set; } = false;
         public string LastWordListName { get; set; } = null;
+        public string WordListsPath { get; set; } = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "QuickDictionary\\Word Lists");
 
         public void SaveConfig()
         {
@@ -39,6 +40,7 @@ namespace QuickDictionary
                     WordListManagerAlwaysOnTop = conf.WordListManagerAlwaysOnTop;
                     PauseClipboard = conf.PauseClipboard;
                     LastWordListName = conf.LastWordListName;
+                    WordListsPath = conf.WordListsPath;
                 }
             }
             else

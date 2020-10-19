@@ -16,7 +16,18 @@ namespace QuickDictionary
         // Path-list tuple
         public static ObservableCollection<PathWordListPair> WordLists { get; set; } = new ObservableCollection<PathWordListPair>();
 
-        public static string WordListPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "QuickDictionary\\Word Lists");
+        public static string WordListPath
+        {
+            get
+            {
+                if (string.IsNullOrWhiteSpace(MainWindow.Config.WordListsPath))
+                {
+                    MainWindow.Config.WordListsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "QuickDictionary\\Word Lists");
+                    MainWindow.Config.SaveConfig();
+                }    
+                return MainWindow.Config.WordListsPath;
+            }
+        }
 
         public static ObservableCollection<string> DeletedPaths = new ObservableCollection<string>();
 
@@ -122,7 +133,15 @@ namespace QuickDictionary
             get
             {
                 if (string.IsNullOrWhiteSpace(Url)) return null;
-                return MainWindow.Dictionaries.FirstOrDefault(x => new Uri(x.Url).Host.Trim().ToLower() == new Uri(Url).Host.Trim().ToLower())?.Name;
+                if (Uri.TryCreate(Url, UriKind.RelativeOrAbsolute, out Uri uri))
+                {
+                    if (uri.IsAbsoluteUri)
+                        return MainWindow.Dictionaries.FirstOrDefault(x => new Uri(x.Url).Host.Trim().ToLower() == uri.Host.Trim().ToLower())?.Name;
+                    else
+                        return null;
+                }
+                else
+                    return null;
             }
         }
         public bool FlashcardFlipped { get => flashcardFlipped; set => SetAndNotify(ref flashcardFlipped, value); }
