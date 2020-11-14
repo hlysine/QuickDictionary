@@ -96,6 +96,10 @@ namespace QuickDictionary
                 message.AppendLine();
                 message.AppendLine();
                 File.AppendAllText(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "QuickDictionary\\log.txt"), message.ToString());
+                if (exception.InnerException!= null)
+                {
+                    LogException(exception.InnerException, source + ".InnerException");
+                }
             }
             catch (Exception)
             {

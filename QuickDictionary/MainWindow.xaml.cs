@@ -110,7 +110,7 @@ namespace QuickDictionary
 
         SemaphoreSlim updateFinished = new SemaphoreSlim(0, 1);
 
-        public MainWindow()
+        public MainWindow() 
         {
             InitializeComponent();
             Helper.HideBoundingBox(root);
