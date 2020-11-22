@@ -1,6 +1,7 @@
 # QuickDictionary
 
-![.NET Framework](https://github.com/Henry-YSLin/QuickDictionary/workflows/.NET%20Framework/badge.svg)
+![Release build](https://github.com/Henry-YSLin/QuickDictionary/workflows/Release%20build/badge.svg)
+![CodeQL](https://github.com/Henry-YSLin/QuickDictionary/workflows/CodeQL/badge.svg)
 
  Speed up the process of looking up a word in dictionaries
  
