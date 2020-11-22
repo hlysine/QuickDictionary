@@ -1,0 +1,44 @@
+name: Release build
+
+on:
+  release:
+    types: [created]
+    
+jobs:
+  build:
+
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v2.0.0
+      name: Checkout Code
+
+    - name: Add msbuild to PATH
+      uses: microsoft/setup-msbuild@v1.0.0
+      env:
+        ACTIONS_ALLOW_UNSECURE_COMMANDS: true
+
+    - name: Setup NuGet
+      uses: NuGet/setup-nuget@v1.0.5
+      env:
+        ACTIONS_ALLOW_UNSECURE_COMMANDS: true
+
+    - name: Restore NuGet Packages
+      run: nuget restore QuickDictionary.sln
+
+    - name: Build App
+      run: msbuild QuickDictionary.sln /p:Configuration=Release /p:Platform=x64
+      
+    - name: Get release
+      id: get_release
+      uses: bruceadams/get-release@v1.2.2
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Upload release binary
+      uses: dwenegar/upload-release-assets@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        release_id: ${{ steps.get_release.outputs.id }}
+        assets_path: QuickDictionary\Releases
