@@ -28,7 +28,7 @@ jobs:
       run: msbuild QuickDictionary.sln /p:Configuration=Release /p:Platform=x64
  
     - name: Upload Artifact
-      uses: actions/upload-artifact@v1.0.0
+      uses: actions/upload-artifact@v2.2.1
       with:
         name: releases_x64
         path: QuickDictionary\Releases
