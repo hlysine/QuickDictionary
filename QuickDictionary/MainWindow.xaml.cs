@@ -30,6 +30,7 @@ using System.Xml.Serialization;
 using MoreLinq.Extensions;
 using System.Globalization;
 using CefSharp.Wpf;
+using System.Runtime.CompilerServices;
 
 namespace QuickDictionary
 {
@@ -104,13 +105,44 @@ namespace QuickDictionary
             }
         }
 
+
+        private ObservableCollection<DictionaryResultPair> dictionaryResults = new ObservableCollection<DictionaryResultPair>();
+        public ObservableCollection<DictionaryResultPair> DictionaryResults
+        {
+            get
+            {
+                return dictionaryResults;
+            }
+            set
+            {
+                dictionaryResults = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(DictionaryResults)));
+            }
+        }
+
+
+        private bool switchDictionaryExpanded;
+        public bool SwitchDictionaryExpanded
+        {
+            get
+            {
+                return switchDictionaryExpanded;
+            }
+            set
+            {
+                switchDictionaryExpanded = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SwitchDictionaryExpanded)));
+            }
+        }
+
+
         public static string PersistentPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "QuickDictionary");
 
         private bool stopSelectionUpdate = false;
 
         SemaphoreSlim updateFinished = new SemaphoreSlim(0, 1);
 
-        public MainWindow() 
+        public MainWindow()
         {
             InitializeComponent();
             Helper.HideBoundingBox(root);
@@ -260,6 +292,9 @@ namespace QuickDictionary
             }
             SelectedWordList = WordListManager.WordLists.FirstOrDefault(x => x.WordList.Name == Config.LastWordListName);
             listWordListSelector.ItemsSource = WordListManager.WordLists;
+            DictionaryResults.Clear();
+            listDictionaries.SelectedItems.Cast<Dictionary>().Select(x => new DictionaryResultPair() { Dictionary = x, HasEntry = false, ToolTip = null }).ForEach(x => DictionaryResults.Add(x));
+            listSwitchDictionaries.ItemsSource = DictionaryResults;
 
             stopSelectionUpdate = false;
 
@@ -359,16 +394,31 @@ namespace QuickDictionary
                     }
                     if (validations.Count > 0)
                         await Task.WhenAny(validations.ToArray());
+                    bool done = false;
                     for (int i = 0; i < validations.Count; i++)
                     {
                         await Task.WhenAny(validations[i]);
-                        if (validations[i].Result)
+                        var res = DictionaryResults.FirstOrDefault(x => x.Dictionary == dicts[i]);
+                        bool validation = validations[i].Result;
+                        if (res != null)
+                        {
+                            res.HasEntry = validation;
+                            res.ToolTip = validation ? $"View \"{word}\" in {dicts[i].Name}" : $"No results of \"{word}\" in {dicts[i].Name}";
+                            res.Url = dicts[i].Url.Replace("%s", WebUtility.UrlEncode(word));
+                        }
+                        if (validation && !done)
                         {
                             browser.Load(dicts[i].Url.Replace("%s", WebUtility.UrlEncode(word)));
-                            return;
+
+                            stopSelectionUpdate = true;
+                            listSwitchDictionaries.SelectedItem = res;
+                            stopSelectionUpdate = false;
+
+                            done = true;
                         }
                     }
-                    browser.Load("data:text/plain;base64,Tm8gcmVzdWx0cyBmb3VuZC4NClRyeSBlbmFibGluZyBtb3JlIGRpY3Rpb25hcmllcy4=");
+                    if (!done)
+                        browser.Load("data:text/plain;base64,Tm8gcmVzdWx0cyBmb3VuZC4NClRyeSBlbmFibGluZyBtb3JlIGRpY3Rpb25hcmllcy4=");
                 }
             }
         }
@@ -389,7 +439,12 @@ namespace QuickDictionary
             {
                 dict.Precedence = listDictionaries.SelectedItems.IndexOf(dict) + 1;
             }
-            Config.SelectedDictionaries = listDictionaries.SelectedItems.Cast<Dictionary>().Select(x => x.Name).ToList();
+            var selectedDicts = listDictionaries.SelectedItems.Cast<Dictionary>();
+            Config.SelectedDictionaries = selectedDicts.Select(x => x.Name).ToList();
+            List<DictionaryResultPair> results = new List<DictionaryResultPair>();
+            results.AddRange(DictionaryResults);
+            DictionaryResults.Clear();
+            selectedDicts.Select(x => results.FirstOrDefault(y => y.Dictionary == x) ?? new DictionaryResultPair() { Dictionary = x, HasEntry = false, ToolTip = null }).ForEach(x => DictionaryResults.Add(x));
             Config.SaveConfig();
         }
 
@@ -676,6 +731,20 @@ namespace QuickDictionary
                 search(word.Word);
             }
         }
+
+        private void listSwitchDictionaries_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (stopSelectionUpdate) return;
+            if (listSwitchDictionaries.SelectedItem != null)
+            {
+                browser.Load((listSwitchDictionaries.SelectedItem as DictionaryResultPair).Url);
+            }
+        }
+
+        private void btnSwitchDictionaryPanel_Click(object sender, RoutedEventArgs e)
+        {
+            SwitchDictionaryExpanded = !SwitchDictionaryExpanded;
+        }
     }
 
     public class WordlistNameValidationRule : ValidationRule
@@ -897,4 +966,38 @@ namespace QuickDictionary
     }
 
     public class DictionaryDragAndDropListBox : DragAndDropListBox<Dictionary> { }
+
+    public class DictionaryResultPair : NotifyPropertyChanged
+    {
+        private Dictionary dictionary;
+        public Dictionary Dictionary
+        {
+            get => dictionary;
+            set => SetAndNotify(ref dictionary, value);
+        }
+
+
+        private bool hasEntry = false;
+        public bool HasEntry
+        {
+            get => hasEntry;
+            set => SetAndNotify(ref hasEntry, value);
+        }
+
+
+        private string toolTip = null;
+        public string ToolTip
+        {
+            get => toolTip;
+            set => SetAndNotify(ref toolTip, value);
+        }
+
+
+        private string url = null;
+        public string Url
+        {
+            get => url;
+            set => SetAndNotify(ref url, value);
+        }
+    }
 }

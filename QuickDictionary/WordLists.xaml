@@ -78,7 +78,8 @@
                     </StackPanel>
                 </Grid>
             </materialDesign:DialogHost.DialogContent>
-            <materialDesign:DrawerHost>
+            <materialDesign:DrawerHost
+                Name="drawerHost">
                 <materialDesign:DrawerHost.LeftDrawerContent>
                     <Grid
                         MinWidth="200">

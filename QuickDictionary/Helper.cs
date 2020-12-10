@@ -185,16 +185,21 @@ namespace QuickDictionary
     {
         public event PropertyChangedEventHandler PropertyChanged;
 
-        protected void SetAndNotify<T>(ref T field, T value, [CallerMemberName] string propertyName = null, IEnumerable<string> calculatedProperties = null)
-        {
-            field = value;
-            Notify(propertyName);
-            calculatedProperties?.ForEach(x => Notify(x));
-        }
-
-        protected void Notify(string propertyName)
+        protected void NotifyChanged(string propertyName)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        protected void NotifyChanged(IEnumerable<string> propertyName)
+        {
+            propertyName.ForEach(x => NotifyChanged(x));
+        }
+
+        protected void SetAndNotify<T>(ref T variable, T value, IEnumerable<string> calculatedProperties = null, [CallerMemberName] string memberName = null)
+        {
+            variable = value;
+            NotifyChanged(memberName);
+            if (calculatedProperties != null) NotifyChanged(calculatedProperties);
         }
     }
 }

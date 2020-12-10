@@ -77,6 +77,7 @@ namespace QuickDictionary
             Helper.HideBoundingBox(root);
             listWordLists.ItemsSource = WordListManager.WordLists;
             checkTopmost.IsSelected = MainWindow.Config.WordListManagerAlwaysOnTop;
+            drawerHost.IsLeftDrawerOpen = true;
         }
 
         private void btnFlipToBack_Click(object sender, RoutedEventArgs e)

@@ -297,6 +297,95 @@
                             VerticalAlignment="Stretch"
                             HorizontalAlignment="Stretch"
                             LoadingStateChanged="browser_LoadingStateChanged" />
+                        <Grid
+                            Grid.Row="2"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Center">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition
+                                    Width="Auto" />
+                                <ColumnDefinition
+                                    Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <Button
+                                Name="btnSwitchDictionaryPanel"
+                                Style="{StaticResource MaterialDesignFlatDarkBgButton}"
+                                ToolTip="Look up the same word in another dictionary"
+                                Width="10"
+                                Height="50"
+                                Padding="0"
+                                Click="btnSwitchDictionaryPanel_Click">
+                                |
+                            </Button>
+                            <ListBox
+                                Grid.Column="1"
+                                x:Name="listSwitchDictionaries"
+                                SelectionChanged="listSwitchDictionaries_SelectionChanged">
+                                <!--Visibility="{Binding SwitchDictionaryExpanded, Converter={StaticResource BoolToVisibilityConverter}}"-->
+                                <ListBox.Style>
+                                    <Style
+                                        BasedOn="{StaticResource MaterialDesignToolVerticalToggleListBox}"
+                                        TargetType="ListBox">
+                                        <Setter
+                                            Property="LayoutTransform">
+                                            <Setter.Value>
+                                                <ScaleTransform
+                                                    ScaleX="0" />
+                                            </Setter.Value>
+                                        </Setter>
+                                        <Style.Triggers>
+                                            <DataTrigger
+                                                Binding="{Binding SwitchDictionaryExpanded, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}"
+                                                Value="True">
+                                                <DataTrigger.EnterActions>
+                                                    <BeginStoryboard>
+                                                        <Storyboard>
+                                                            <DoubleAnimation
+                                                                Storyboard.TargetProperty="(LayoutTransform).(ScaleTransform.ScaleX)"
+                                                                From="0"
+                                                                To="1"
+                                                                FillBehavior="HoldEnd"
+                                                                Duration="0:0:0.250" />
+                                                        </Storyboard>
+                                                    </BeginStoryboard>
+                                                </DataTrigger.EnterActions>
+                                                <DataTrigger.ExitActions>
+                                                    <BeginStoryboard>
+                                                        <Storyboard>
+                                                            <DoubleAnimation
+                                                                Storyboard.TargetProperty="(LayoutTransform).(ScaleTransform.ScaleX)"
+                                                                From="1"
+                                                                To="0"
+                                                                FillBehavior="HoldEnd"
+                                                                Duration="0:0:0.250" />
+                                                        </Storyboard>
+                                                    </BeginStoryboard>
+                                                </DataTrigger.ExitActions>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </ListBox.Style>
+                                <ListBox.ItemContainerStyle>
+                                    <Style
+                                        TargetType="ListBoxItem">
+                                        <Setter
+                                            Property="IsEnabled"
+                                            Value="{Binding HasEntry}" />
+                                        <Setter
+                                            Property="ToolTip"
+                                            Value="{Binding ToolTip}" />
+                                    </Style>
+                                </ListBox.ItemContainerStyle>
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <materialDesign:PackIcon
+                                            Margin="5"
+                                            Kind="{Binding Dictionary.Icon}" />
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+
+                        </Grid>
                         <ToggleButton
                             Name="btnNewWordPanel"
                             Grid.Row="2"
@@ -328,8 +417,49 @@
                             Padding="8 8 8 18"
                             VerticalAlignment="Stretch"
                             HorizontalAlignment="Stretch"
-                            UniformCornerRadius="6"
-                            Visibility="{Binding ShowNewWordPanel, Converter={StaticResource BoolToVisibilityConverter}}">
+                            UniformCornerRadius="6">
+                            <materialDesign:Card.Style>
+                                <Style
+                                    TargetType="materialDesign:Card">
+                                    <Setter
+                                        Property="LayoutTransform">
+                                        <Setter.Value>
+                                            <ScaleTransform
+                                                ScaleY="0" />
+                                        </Setter.Value>
+                                    </Setter>
+                                    <Style.Triggers>
+                                        <DataTrigger
+                                            Binding="{Binding ShowNewWordPanel, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}"
+                                            Value="True">
+                                            <DataTrigger.EnterActions>
+                                                <BeginStoryboard>
+                                                    <Storyboard>
+                                                        <DoubleAnimation
+                                                            Storyboard.TargetProperty="(LayoutTransform).(ScaleTransform.ScaleY)"
+                                                            From="0"
+                                                            To="1"
+                                                            FillBehavior="HoldEnd"
+                                                            Duration="0:0:0.250" />
+                                                    </Storyboard>
+                                                </BeginStoryboard>
+                                            </DataTrigger.EnterActions>
+                                            <DataTrigger.ExitActions>
+                                                <BeginStoryboard>
+                                                    <Storyboard>
+                                                        <DoubleAnimation
+                                                            Storyboard.TargetProperty="(LayoutTransform).(ScaleTransform.ScaleY)"
+                                                            From="1"
+                                                            To="0"
+                                                            FillBehavior="HoldEnd"
+                                                            Duration="0:0:0.250" />
+                                                    </Storyboard>
+                                                </BeginStoryboard>
+                                            </DataTrigger.ExitActions>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </materialDesign:Card.Style>
                             <Grid
                                 VerticalAlignment="Stretch">
                                 <Grid
