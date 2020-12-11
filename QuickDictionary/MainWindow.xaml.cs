@@ -31,6 +31,8 @@ using MoreLinq.Extensions;
 using System.Globalization;
 using CefSharp.Wpf;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using System.Windows.Interop;
 
 namespace QuickDictionary
 {
@@ -224,11 +226,21 @@ namespace QuickDictionary
             overlay.ShowDialog();
         }
 
+        [DllImport("user32.dll", CharSet = CharSet.Auto)]
+        private static extern IntPtr SendMessage(IntPtr hWnd, int Msg, int wParam, int lParam);
+
+        private void Unminimize()
+        {
+            WindowInteropHelper winInterop = new WindowInteropHelper(this);
+            SendMessage(winInterop.Handle, 0x0112, 0xF120, 0);
+        }
+
         private void KeyHook_KeyPressed(object sender, KeyPressedEventArgs e)
         {
             if (e.Key == System.Windows.Forms.Keys.F)
             {
-                this.Activate();
+                Unminimize();
+                Activate();
                 Keyboard.Focus(txtWord);
                 txtWord.Focus();
                 txtWord.SelectAll();
@@ -385,6 +397,12 @@ namespace QuickDictionary
                 if (Regex.IsMatch(word, "[a-zA-Z]"))
                 {
                     txtWord.Text = word;
+                    if (!ShowNewWordPanel)
+                    {
+                        Keyboard.Focus(txtWord);
+                        txtWord.Focus();
+                        txtWord.SelectAll();
+                    }
                     List<Dictionary> dicts = listDictionaries.SelectedItems.Cast<Dictionary>().ToList();
                     List<Task<bool>> validations = new List<Task<bool>>();
                     foreach (Dictionary dict in dicts)
@@ -480,6 +498,13 @@ namespace QuickDictionary
                     Dispatcher.Invoke(() =>
                     {
                         txtWord.Text = headword;
+
+                        if (!ShowNewWordPanel && !(wordListWindow?.IsActive).GetValueOrDefault())
+                        {
+                            Keyboard.Focus(txtWord);
+                            txtWord.Focus();
+                            txtWord.SelectAll();
+                        }
                     });
             }
         }
@@ -729,6 +754,14 @@ namespace QuickDictionary
             else
             {
                 search(word.Word);
+            }
+            Unminimize();
+            Activate();
+            if (!ShowNewWordPanel)
+            {
+                Keyboard.Focus(txtWord);
+                txtWord.Focus();
+                txtWord.SelectAll();
             }
         }
 
