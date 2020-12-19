@@ -8,4 +8,7 @@
  
  ## Downloads
  
-[Releases page](https://github.com/Henry-YSLin/QuickDictionary/releases)
+ | **[Windows x64](https://github.com/Henry-YSLin/QuickDictionary/releases/latest/download/Setup.exe)**|
+ |---------------|
+
+Alternatively, check out the [Releases](https://github.com/Henry-YSLin/QuickDictionary/releases) page.
