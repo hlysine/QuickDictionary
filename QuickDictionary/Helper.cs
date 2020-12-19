@@ -179,6 +179,68 @@ namespace QuickDictionary
 
             return newUrl;
         }
+
+        public static async Task<HttpStatusCode> GetFinalStatusCodeAsync(string url)
+        {
+            if (string.IsNullOrWhiteSpace(url))
+                return HttpStatusCode.NotFound;
+
+            int maxRedirCount = 8;  // prevent infinite loops
+            string newUrl = url;
+            HttpStatusCode statusCode = HttpStatusCode.NotFound;
+            do
+            {
+                HttpWebRequest req = null;
+                HttpWebResponse resp = null;
+                try
+                {
+                    req = (HttpWebRequest)HttpWebRequest.Create(url);
+                    req.Method = "HEAD";
+                    req.AllowAutoRedirect = false;
+                    resp = (HttpWebResponse)await req.GetResponseAsync();
+                    statusCode = resp.StatusCode;
+                    switch (resp.StatusCode)
+                    {
+                        case HttpStatusCode.OK:
+                            return statusCode;
+                        case HttpStatusCode.Redirect:
+                        case HttpStatusCode.MovedPermanently:
+                        case HttpStatusCode.RedirectKeepVerb:
+                        case HttpStatusCode.RedirectMethod:
+                            newUrl = resp.Headers["Location"];
+                            if (newUrl == null)
+                                return statusCode;
+
+                            if (newUrl.IndexOf("://", System.StringComparison.Ordinal) == -1)
+                            {
+                                // Doesn't have a URL Schema, meaning it's a relative or absolute URL
+                                Uri u = new Uri(new Uri(url), newUrl);
+                                newUrl = u.ToString();
+                            }
+                            break;
+                        default:
+                            return statusCode;
+                    }
+                    url = newUrl;
+                }
+                catch (WebException)
+                {
+                    // Return the last known good URL
+                    return statusCode;
+                }
+                catch (Exception)
+                {
+                    return statusCode;
+                }
+                finally
+                {
+                    if (resp != null)
+                        resp.Close();
+                }
+            } while (maxRedirCount-- > 0);
+
+            return statusCode;
+        }
     }
 
     public class NotifyPropertyChanged : INotifyPropertyChanged

@@ -288,6 +288,7 @@ namespace QuickDictionary
             Dictionaries.Add(Dictionary.MedicalDictionary);
             Dictionaries.Add(Dictionary.OxfordLearnersDict);
             Dictionaries.Add(Dictionary.DictionaryCom);
+            Dictionaries.Add(Dictionary.Wikipedia);
             Dictionaries.Add(Dictionary.GoogleTranslate);
             Dictionaries.Add(Dictionary.GoogleDefinitions);
             listDictionaries.ItemsSource = Dictionaries;
@@ -477,7 +478,7 @@ namespace QuickDictionary
             if (Uri.TryCreate(address, UriKind.RelativeOrAbsolute, out Uri uri))
             {
                 if (uri.IsAbsoluteUri)
-                    dict = Dictionaries.FirstOrDefault(x => new Uri(x.Url).Host.Trim().ToLower() == uri.Host.Trim().ToLower());
+                    dict = Dictionaries.FirstOrDefault(x => x.ValidateUrl(address).Result);
                 else
                     dict = null;
             }
@@ -599,7 +600,7 @@ namespace QuickDictionary
                 if (Uri.TryCreate(browser.Address, UriKind.RelativeOrAbsolute, out Uri uri))
                 {
                     if (uri.IsAbsoluteUri)
-                        dict = Dictionaries.FirstOrDefault(x => new Uri(x.Url).Host.Trim().ToLower() == uri.Host.Trim().ToLower());
+                        dict = Dictionaries.FirstOrDefault(x => x.ValidateUrl(browser.Address).Result);
                     else
                         dict = null;
                 }
@@ -812,6 +813,9 @@ namespace QuickDictionary
         // Url to the dictionary with %s in place of the query
         public string Url { get; set; }
 
+        // Function to check if a URL belongs to this dictionary
+        public Func<string, Task<bool>> ValidateUrl { get; set; }
+
         // Function to validate a query given the query url and query text
         public Func<string, string, Task<bool>> ValidateQuery { get; set; }
 
@@ -857,6 +861,10 @@ namespace QuickDictionary
         public static Dictionary CambridgeCE = new Dictionary()
         {
             Url = "https://dictionary.cambridge.org/search/english-chinese-traditional/direct/?source=gadgets&q=%s",
+            ValidateUrl = async (url) =>
+            {
+                return new Uri(url).Host.Trim().ToLower().Contains("cambridge.org");
+            },
             ValidateQuery = async (url, word) =>
             {
                 return !(await Helper.GetFinalRedirectAsync(url)).Contains("spellcheck");
@@ -880,19 +888,24 @@ namespace QuickDictionary
         public static Dictionary MedicalDictionary = new Dictionary()
         {
             Url = "https://www.merriam-webster.com/medical/%s",
+            ValidateUrl = async (url) =>
+            {
+                return new Uri(url).Host.Trim().ToLower().Contains("merriam-webster.com");
+            },
             ValidateQuery = async (url, word) =>
             {
-                var web = new HtmlWeb();
-                var doc = await web.LoadFromWebAsync(url);
-                if (web.StatusCode != System.Net.HttpStatusCode.OK)
-                {
-                    return false;
-                }
-                var failNode1 = doc.DocumentNode.SelectSingleNode(@"//p[contains(@class,""missing-query"")]");
-                if (failNode1 != null) return false;
-                var failNode2 = doc.DocumentNode.SelectSingleNode(@"//div[contains(@class,""no-spelling-suggestions"")]");
-                if (failNode2 != null) return false;
-                return true;
+                return await Helper.GetFinalStatusCodeAsync(url) == HttpStatusCode.OK;
+                //var web = new HtmlWeb();
+                //var doc = await web.LoadFromWebAsync(url);
+                //if (web.StatusCode != System.Net.HttpStatusCode.OK)
+                //{
+                //    return false;
+                //}
+                //var failNode1 = doc.DocumentNode.SelectSingleNode(@"//p[contains(@class,""missing-query"")]");
+                //if (failNode1 != null) return false;
+                //var failNode2 = doc.DocumentNode.SelectSingleNode(@"//div[contains(@class,""no-spelling-suggestions"")]");
+                //if (failNode2 != null) return false;
+                //return true;
             },
             GetWord = async (browser) =>
             {
@@ -913,6 +926,10 @@ namespace QuickDictionary
         public static Dictionary OxfordLearnersDict = new Dictionary()
         {
             Url = "https://www.oxfordlearnersdictionaries.com/search/english/?q=%s",
+            ValidateUrl = async (url) =>
+            {
+                return new Uri(url).Host.Trim().ToLower().Contains("oxfordlearnersdictionaries.com");
+            },
             ValidateQuery = async (url, word) =>
             {
                 return !(await Helper.GetFinalRedirectAsync(url)).Contains("spellcheck");
@@ -939,17 +956,26 @@ namespace QuickDictionary
         public static Dictionary DictionaryCom = new Dictionary()
         {
             Url = "https://www.dictionary.com/browse/%s",
+            ValidateUrl = async (url) =>
+            {
+                return new Uri(url).Host.Trim().ToLower().Contains("dictionary.com");
+            },
             ValidateQuery = async (url, word) =>
             {
-                return !(await Helper.GetFinalRedirectAsync(url)).Contains("misspelling");
+                return await Helper.GetFinalStatusCodeAsync(url) == HttpStatusCode.OK;
             },
             GetWord = async (browser) =>
             {
                 var headword = await browser.GetInnerTextByXPath(@"//h1[@class=""css-1jzk4d9 e1rg2mtf8""]");
                 if (!string.IsNullOrWhiteSpace(headword))
                     return headword;
-                headword = Regex.Match(browser.Address, @"www\.dictionary\.com\/definition\/[\w-_]+\/([\w_-]+)").Groups[1].Value;
-                return headword;
+                Match match = Regex.Match(browser.Address, @"www\.dictionary\.com\/definition\/[\w-_]+\/([^?]+)");
+                if (match.Success)
+                {
+                    headword = WebUtility.UrlDecode(match.Groups[1].Value);
+                    return headword;
+                }
+                return null;
             },
             GetDescription = async (browser) =>
             {
@@ -962,6 +988,10 @@ namespace QuickDictionary
         public static Dictionary GoogleDefinitions = new Dictionary()
         {
             Url = "https://www.google.com/search?q=define+%s",
+            ValidateUrl = async (url) =>
+            {
+                return new Uri(url).Host.Trim().ToLower().Contains("www.google.com");
+            },
             ValidateQuery = async (url, word) =>
             {
                 return true;
@@ -981,6 +1011,10 @@ namespace QuickDictionary
         public static Dictionary GoogleTranslate = new Dictionary()
         {
             Url = "https://translate.google.com/#view=home&op=translate&sl=en&tl=zh-TW&text=%s",
+            ValidateUrl = async (url) =>
+            {
+                return new Uri(url).Host.Trim().ToLower().Contains("translate.google.com");
+            },
             ValidateQuery = async (url, word) =>
             {
                 return true;
@@ -995,6 +1029,48 @@ namespace QuickDictionary
             },
             Icon = PackIconKind.GoogleTranslate,
             Name = "Google Translate",
+        };
+
+        public static Dictionary Wikipedia = new Dictionary()
+        {
+            Url = "https://www.wikipedia.org/wiki/%s",
+            ValidateUrl = async (url) =>
+            {
+                return new Uri(url).Host.Trim().ToLower().Contains("wikipedia.org");
+            },
+            ValidateQuery = async (url, word) =>
+            {   
+                return await Helper.GetFinalStatusCodeAsync(url) == HttpStatusCode.OK;
+            },
+            GetWord = async (browser) =>
+            {
+                var headword = await browser.GetInnerTextByXPath(@"//div[@class=""page-heading""]");
+                if (!string.IsNullOrWhiteSpace(headword))
+                    return headword;
+                Match match = Regex.Match(browser.Address, @"wikipedia\.org\/w\/index\.php\?title=([^&]+)");
+                if (match.Success)
+                {
+                    headword = WebUtility.UrlDecode(match.Groups[1].Value);
+                    return headword;
+                }
+                match = Regex.Match(browser.Address, @"wikipedia\.org\/wiki\/([^?]+)");
+                if (match.Success)
+                {
+                    headword = WebUtility.UrlDecode(match.Groups[1].Value);
+                    return headword;
+                }
+                return null;
+            },
+            GetDescription = async (browser) =>
+            {
+                string res = await browser.GetInnerTextByXPath(@"(//div[@id=""bodyContent""]//p[not(@class)])[1]");
+                if (res == null)
+                    return null;
+                else
+                    return Regex.Replace(res, @"\[\d+\]", "");
+            },
+            Icon = PackIconKind.Wikipedia,
+            Name = "Wikipedia",
         };
     }
 

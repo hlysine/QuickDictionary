@@ -48,6 +48,7 @@ namespace QuickDictionary
             settings.CachePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "QuickDictionary\\cache");
             settings.PersistUserPreferences = true;
             settings.PersistSessionCookies = true;
+            settings.UserAgent = "Mozilla/5.0 (Linux; Android 10) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.101 Mobile Safari/537.36";
 
             Cef.Initialize(settings);
         }
