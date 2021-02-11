@@ -1300,7 +1300,7 @@ namespace QuickDictionary
             },
             GetDescription = async (browser) =>
             {
-                return await browser.GetInnerTextByXPath(@"//div[contains(@class,""text-wrap tlid-copy-target"")]");
+                return await browser.GetInnerTextByXPath(@"//div[contains(@class,""J0lOec"")]");
             },
             Icon = PackIconKind.GoogleTranslate,
             Name = "Google Translate",
