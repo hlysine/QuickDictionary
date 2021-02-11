@@ -8,6 +8,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Forms;
 using System.Windows.Interop;
 using System.Windows.Media.Imaging;
 using Tesseract;
@@ -20,7 +21,6 @@ namespace QuickDictionary
     public partial class OCROverlay : Window
     {
         public Point Selection { get; set; }
-        public List<OCRWord> OCRWords { get; set; }
         public bool Selected { get; set; } = false;
 
         public delegate void WordSelectedHandler(object sender, Point position);
@@ -39,45 +39,19 @@ namespace QuickDictionary
             });
         }
 
-        private void showBorder(OCRWord word)
+        private void updateBorder(Point pos)
         {
-            Canvas.SetLeft(borderWord, word.Rect.X);
-            Canvas.SetTop(borderWord, word.Rect.Y);
-            borderWord.Width = word.Rect.Width;
-            borderWord.Height = word.Rect.Height;
-            borderWord.Visibility = Visibility.Visible;
-            borderWord.ToolTip = word.Word;
-        }
-
-        public static OCRWord FindClosest(List<OCRWord> OCRWords, float x, float y)
-        {
-            var word = OCRWords.FirstOrDefault(w => w.Rect.Contains(x, y));
-            if (word != null)
-            {
-                return word;
-            }
-            word = OCRWords.MinBy(w => w.Rect.DistanceToPoint(x, y)).FirstOrDefault();
-            if (word != null)
-            {
-                return word;
-            }
-            return null;
+            Canvas.SetLeft(borderWord, pos.X - MainWindow.Config.CaptureBoxWidth / 2);
+            Canvas.SetTop(borderWord, pos.Y - MainWindow.Config.CaptureBoxWidth / MainWindow.Config.CaptureBoxWHRatio / 2);
+            borderWord.Width = MainWindow.Config.CaptureBoxWidth;
+            borderWord.Height = MainWindow.Config.CaptureBoxWidth / MainWindow.Config.CaptureBoxWHRatio;
         }
 
         private void Canvas_PreviewMouseMove(object sender, System.Windows.Input.MouseEventArgs e)
         {
             e.Handled = true;
-            if (OCRWords != null)
-            {
-                Point pos = e.GetPosition(this);
-                var word = FindClosest(OCRWords, (float)pos.X, (float)pos.Y);
-                if (word != null)
-                {
-                    showBorder(word);
-                    return;
-                }
-            }
-            borderWord.Visibility = Visibility.Collapsed;
+            Point pos = e.GetPosition(this);
+            updateBorder(pos);
         }
 
         private void Canvas_PreviewMouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
@@ -115,6 +89,16 @@ namespace QuickDictionary
             {
                 Window_Deactivated(this, EventArgs.Empty);
             }
+        }
+
+        private void Window_PreviewMouseWheel(object sender, System.Windows.Input.MouseWheelEventArgs e)
+        {
+            MainWindow.Config.CaptureBoxWidth *= Math.Pow(1.1, e.Delta / 120);
+            Console.WriteLine(e.Delta);
+            MainWindow.Config.CaptureBoxWidth = Math.Min(Screen.PrimaryScreen.Bounds.Width, Math.Max(50, MainWindow.Config.CaptureBoxWidth));
+            MainWindow.Config.SaveConfig();
+            Point pos = e.GetPosition(this);
+            updateBorder(pos);
         }
     }
 }

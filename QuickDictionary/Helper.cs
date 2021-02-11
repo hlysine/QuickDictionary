@@ -87,7 +87,7 @@ namespace QuickDictionary
             });
 
             if (waitTask != await Task.WhenAny(waitTask, Task.Delay(timeout)))
-                throw new TimeoutException();
+                return;
         }
 
         /// <summary>
@@ -106,12 +106,27 @@ namespace QuickDictionary
 
             if (waitTask != await Task.WhenAny(waitTask,
                     Task.Delay(timeout)))
-                throw new TimeoutException();
+                return;
+        }
+        public static Bitmap cropAtRect(this Bitmap b, Rectangle r)
+        {
+            Bitmap nb = new Bitmap(r.Width, r.Height);
+            using (Graphics g = Graphics.FromImage(nb))
+            {
+                g.DrawImage(b, -r.X, -r.Y);
+                return nb;
+            }
         }
 
         public static System.Windows.Point RealPixelsToWpf(Window w, System.Windows.Point p)
         {
             var t = PresentationSource.FromVisual(w).CompositionTarget.TransformFromDevice;
+            return t.Transform(p);
+        }
+
+        public static System.Windows.Point WpfToRealPixels(Window w, System.Windows.Point p)
+        {
+            var t = PresentationSource.FromVisual(w).CompositionTarget.TransformToDevice;
             return t.Transform(p);
         }
 

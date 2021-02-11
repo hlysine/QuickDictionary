@@ -33,7 +33,7 @@
     <UpdateRequired>false</UpdateRequired>
     <MapFileExtensions>true</MapFileExtensions>
     <ApplicationRevision>0</ApplicationRevision>
-    <ApplicationVersion>1.4.1.0</ApplicationVersion>
+    <ApplicationVersion>1.5.0.0</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
   </PropertyGroup>
@@ -181,6 +181,13 @@
     <Compile Include="BoolToHVisibilityConverter.cs" />
     <Compile Include="BoolToVisibilityConverter.cs" />
     <Compile Include="Config.cs" />
+    <Compile Include="InstantOcrHighlighter.xaml.cs">
+      <DependentUpon>InstantOcrHighlighter.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="InstantTooltip.xaml.cs">
+      <DependentUpon>InstantTooltip.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="InverseNullToVisibilityConverter.cs" />
     <Compile Include="OCROverlay.xaml.cs">
       <DependentUpon>OCROverlay.xaml</DependentUpon>
     </Compile>
@@ -196,6 +203,14 @@
     <Compile Include="WordLists.xaml.cs">
       <DependentUpon>WordLists.xaml</DependentUpon>
     </Compile>
+    <Page Include="InstantOcrHighlighter.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="InstantTooltip.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -244,6 +259,7 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
+    <Compile Include="NullToVisibilityConverter.cs" />
     <None Include="QuickDictionary.nuspec" />
     <Resource Include="ic_launcher.ico" />
     <EmbeddedResource Include="Properties\Resources.resx">
@@ -273,6 +289,12 @@
       <ProductName>.NET Framework 3.5 SP1</ProductName>
       <Install>false</Install>
     </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ImageComparison\ImageComparison.csproj">
+      <Project>{9317de4a-213d-4afc-b58f-ed401204534a}</Project>
+      <Name>ImageComparison</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

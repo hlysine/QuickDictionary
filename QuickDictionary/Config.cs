@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Threading;
 using System.Xml.Serialization;
 
 namespace QuickDictionary
@@ -16,14 +17,41 @@ namespace QuickDictionary
         public bool PauseClipboard { get; set; } = false;
         public string LastWordListName { get; set; } = null;
         public string WordListsPath { get; set; } = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "QuickDictionary\\Word Lists");
+        public double CaptureBoxWidth { get; set; } = 200;
+        public double CaptureBoxWHRatio { get; set; } = 4;
 
-        public void SaveConfig()
+        DispatcherTimer timer;
+        bool needSave = false;
+
+        public Config()
+        {
+            timer = new DispatcherTimer();
+            timer.Interval = TimeSpan.FromSeconds(5);
+            timer.Tick += Timer_Tick;
+        }
+
+        ~Config()
+        {
+            timer.Stop();
+        }
+
+        private void Timer_Tick(object sender, EventArgs e)
+        {
+            save();
+        }
+
+        private void save()
         {
             using (FileStream fs = new FileStream(Path.Combine(MainWindow.PersistentPath, "config.xml"), FileMode.Create))
             {
                 XmlSerializer serializer = new XmlSerializer(typeof(Config));
                 serializer.Serialize(fs, this);
             }
+        }
+
+        public void SaveConfig()
+        {
+            needSave = true;
         }
 
         public void LoadConfig()
@@ -41,6 +69,9 @@ namespace QuickDictionary
                     PauseClipboard = conf.PauseClipboard;
                     LastWordListName = conf.LastWordListName;
                     WordListsPath = conf.WordListsPath;
+                    CaptureBoxWidth = conf.CaptureBoxWidth;
+                    CaptureBoxWHRatio = conf.CaptureBoxWHRatio;
+                    timer.Start();
                 }
             }
             else

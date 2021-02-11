@@ -222,5 +222,15 @@ namespace QuickDictionary
 
         [DllImport("kernel32.dll", EntryPoint = "SetLastError")]
         public static extern void SetLastError(int dwErrorCode);
+
+        [DllImport("user32.dll")]
+        public static extern uint SetWindowDisplayAffinity(IntPtr hwnd, DisplayAffinity dwAffinity); 
+
+        public enum DisplayAffinity : uint
+        {
+            None = 0,
+            Monitor = 1,
+            ExcludeFromCapture = 3
+        }
     }
 }

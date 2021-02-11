@@ -235,7 +235,7 @@
                                 Name="btnOCR"
                                 Grid.Column="3"
                                 Style="{StaticResource MaterialDesignIconButton}"
-                                ToolTip="OCR look up (Alt+G)"
+                                ToolTip="OCR look up (Alt+G)&#x0a;&#x0a;Shift-click for auto pop-up mode"
                                 Click="btnOCR_Click">
                                 <materialDesign:PackIcon
                                     Kind="Show" />

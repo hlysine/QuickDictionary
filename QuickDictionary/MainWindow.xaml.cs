@@ -20,7 +20,6 @@ using System.Security.Cryptography.X509Certificates;
 using System.Collections.ObjectModel;
 using Tesseract;
 using System.IO;
-using System.Drawing;
 using System.Windows.Media.Animation;
 using Squirrel;
 using CefSharp.Handler;
@@ -33,6 +32,9 @@ using CefSharp.Wpf;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Windows.Interop;
+using System.Drawing;
+using System.Windows.Threading;
+using static XnaFan.ImageComparison.ExtensionMethods;
 
 namespace QuickDictionary
 {
@@ -47,7 +49,18 @@ namespace QuickDictionary
         private WordLists wordListWindow = null;
 
         TesseractEngine engine = new TesseractEngine("data/tessdata", "eng", EngineMode.LstmOnly);
-        bool engineBusy = true;
+
+        // default is false, set 1 for true.
+        private int _threadSafeEngineBusy = 0;
+        private bool engineBusy
+        {
+            get { return (Interlocked.CompareExchange(ref _threadSafeEngineBusy, 1, 1) == 1); }
+            set
+            {
+                if (value) Interlocked.CompareExchange(ref _threadSafeEngineBusy, 1, 0);
+                else Interlocked.CompareExchange(ref _threadSafeEngineBusy, 0, 1);
+            }
+        }
 
         string title;
 
@@ -138,11 +151,28 @@ namespace QuickDictionary
         }
 
 
+        private bool autoOcr;
+        public bool AutoOcr
+        {
+            get
+            {
+                return autoOcr;
+            }
+            set
+            {
+                autoOcr = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(AutoOcr)));
+            }
+        }
+
+
         public static string PersistentPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "QuickDictionary");
 
         private bool stopSelectionUpdate = false;
 
         SemaphoreSlim updateFinished = new SemaphoreSlim(0, 1);
+
+        DispatcherTimer autoOcrTimer;
 
         public MainWindow()
         {
@@ -150,12 +180,80 @@ namespace QuickDictionary
             Helper.HideBoundingBox(root);
 
             browser.RequestHandler = new AdBlockRequestHandler();
+
+            autoOcrTimer = new DispatcherTimer();
+            autoOcrTimer.Interval = TimeSpan.FromMilliseconds(100);
+            autoOcrTimer.Tick += AutoOcrTimer_Tick;
         }
 
-        List<OCRWord> OCRWords = new List<OCRWord>();
-        Task ocrTask;
+        System.Windows.Point cursor;
+        DateTime cursorIdleSince;
+        InstantOcrHighlighter highlighter;
+        Bitmap wordBitmap;
+        bool autoLookUpDone = false;
 
-        private void startOCR()
+        private async Task autoLookup(System.Windows.Point newCursor)
+        {
+            if (engineBusy) return;
+            if (DateTime.Now - cursorIdleSince >= TimeSpan.FromSeconds(1) && !autoLookUpDone)
+            {
+                screenshot = ScreenCapture.GetScreenshot();
+                var orig = originalWord;
+                OCRWord word = await OcrAtPoint(newCursor, true);
+                if (word != null && (orig == null || word.Word.Trim().ToLower() != orig.Trim().ToLower()))
+                {
+                    if (highlighter != null)
+                    {
+                        highlighter.Close();
+                        highlighter = null;
+                    }
+                    highlighter = new InstantOcrHighlighter();
+                    highlighter.SetWord(word);
+                    highlighter.Show();
+                    wordBitmap = ScreenCapture.GetScreenshot()
+                        .cropAtRect(new System.Drawing.Rectangle((int)word.Rect.Left, (int)word.Rect.Top, (int)word.Rect.Width, (int)word.Rect.Height));
+                }
+                autoLookUpDone = true;
+            }
+        }
+
+        private async void AutoOcrTimer_Tick(object sender, EventArgs e)
+        {
+            autoOcrTimer.Stop();
+            var p = System.Windows.Forms.Control.MousePosition;
+            var newCursor = Helper.RealPixelsToWpf(this, new System.Windows.Point(p.X, p.Y));
+            if (highlighter != null)
+            {
+                var word = highlighter.OcrWord;
+                using (Bitmap newBmp = ScreenCapture.GetScreenshot()
+                            .cropAtRect(new Rectangle((int)word.Rect.Left, (int)word.Rect.Top, (int)word.Rect.Width, (int)word.Rect.Height)))
+                {
+                    float pDiff = newBmp.PercentageDifference(wordBitmap);
+                    if (pDiff > 0.15)
+                    {
+                        highlighter.Close();
+                        highlighter = null;
+                        wordBitmap.Dispose();
+                        wordBitmap = null;
+                    }
+                }
+            }
+            if (newCursor == cursor)
+            {
+                await autoLookup(newCursor);
+            }
+            else
+            {
+                cursor = newCursor;
+                cursorIdleSince = DateTime.Now;
+                autoLookUpDone = false;
+            }
+            autoOcrTimer.Start();
+        }
+
+        Bitmap screenshot;
+
+        private async void startOCR()
         {
             if (engineBusy)
             {
@@ -165,17 +263,12 @@ namespace QuickDictionary
             }
             OCROverlay overlay = new OCROverlay();
             overlay.WordSelected += Overlay_WordSelected;
-            OCRWords.Clear();
-            var screenshot = ScreenCapture.GetScreenshot();
-            overlay.OCRWords = OCRWords;
-            ocrTask = Task.Run(() =>
+            screenshot = ScreenCapture.GetScreenshot();
+            await Task.Run(() =>
             {
-                engineBusy = true;
-                Pix tessImg;
                 using (MemoryStream ms = new MemoryStream())
                 {
                     screenshot.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
-                    tessImg = Pix.LoadFromMemory(ms.ToArray());
 
                     ms.Seek(0, SeekOrigin.Begin);
 
@@ -189,38 +282,6 @@ namespace QuickDictionary
                         overlay.SetBg(bitmapImage);
                     });
                 }
-
-                using (var page = engine.Process(tessImg, PageSegMode.SparseText))
-                {
-                    using (var iter = page.GetIterator())
-                    {
-                        iter.Begin();
-                        OCRWords.Clear();
-                        do
-                        {
-                            string word = iter.GetText(PageIteratorLevel.Word);
-
-                            if (!string.IsNullOrWhiteSpace(word))
-                                if (iter.TryGetBoundingBox(PageIteratorLevel.Word, out Tesseract.Rect rect))
-                                {
-                                    if (Regex.IsMatch(word, "[a-zA-Z]"))
-                                    {
-                                        Dispatcher.Invoke(() =>
-                                        {
-                                            System.Windows.Point p1 = Helper.RealPixelsToWpf(this, new System.Windows.Point(rect.X1, rect.Y1));
-                                            System.Windows.Point p2 = Helper.RealPixelsToWpf(this, new System.Windows.Point(rect.X2, rect.Y2));
-                                            OCRWords.Add(new OCRWord()
-                                            {
-                                                Rect = new RectangleF((float)p1.X, (float)p1.Y, (float)(p2.X - p1.X), (float)(p2.Y - p1.Y)),
-                                                Word = word,
-                                            });
-                                        });
-                                    }
-                                }
-                        } while (iter.Next(PageIteratorLevel.Word));
-                    }
-                }
-                engineBusy = false;
             });
             Dispatcher.Invoke(() => progressLoading.Visibility = Visibility.Visible);
             overlay.ShowDialog();
@@ -235,11 +296,12 @@ namespace QuickDictionary
             SendMessage(winInterop.Handle, 0x0112, 0xF120, 0);
         }
 
-        private void KeyHook_KeyPressed(object sender, KeyPressedEventArgs e)
+        private async void KeyHook_KeyPressed(object sender, KeyPressedEventArgs e)
         {
             if (e.Key == System.Windows.Forms.Keys.F)
             {
-                Unminimize();
+                if (WindowState == WindowState.Minimized)
+                    Unminimize();
                 Activate();
                 Keyboard.Focus(txtWord);
                 txtWord.Focus();
@@ -247,23 +309,105 @@ namespace QuickDictionary
             }
             else
             {
-                startOCR();
+                if (AutoOcr)
+                {
+                    var p = System.Windows.Forms.Control.MousePosition;
+                    var newCursor = Helper.RealPixelsToWpf(this, new System.Windows.Point(p.X, p.Y));
+                    await autoLookup(newCursor);
+                }
+                else
+                    startOCR();
             }
+        }
+
+        static OCRWord FindClosest(List<OCRWord> OCRWords, float x, float y, bool strict)
+        {
+            var word = OCRWords.FirstOrDefault(w => w.Rect.Contains(x, y));
+            if (word != null)
+            {
+                return word;
+            }
+            if (strict)
+                word = OCRWords.Where(w => w.Rect.DistanceToPoint(x, y) < 2).MinBy(w => w.Rect.DistanceToPoint(x, y)).FirstOrDefault();
+            else
+                word = OCRWords.MinBy(w => w.Rect.DistanceToPoint(x, y)).FirstOrDefault();
+            if (word != null)
+            {
+                return word;
+            }
+            return null;
+        }
+
+        async Task<OCRWord> OcrAtPoint(System.Windows.Point position, bool strict)
+        {
+            engineBusy = true;
+            Pix tessImg = null;
+
+            List<OCRWord> OCRWords = new List<OCRWord>();
+            Vector boxOffset = new Vector(Config.CaptureBoxWidth / 2, Config.CaptureBoxWidth / Config.CaptureBoxWHRatio / 2);
+            var wp1 = Helper.WpfToRealPixels(this, position - boxOffset);
+            var wp2 = Helper.WpfToRealPixels(this, position + boxOffset);
+
+            await Task.Run(() =>
+            {
+                using (MemoryStream ms = new MemoryStream())
+                {
+                    Bitmap bmp = Helper.cropAtRect(screenshot, new System.Drawing.Rectangle((int)wp1.X, (int)wp1.Y, (int)(wp2.X - wp1.X), (int)(wp2.Y - wp1.Y)));
+                    bmp.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
+                    tessImg = Pix.LoadFromMemory(ms.ToArray());
+                }
+
+                using (var page = engine.Process(tessImg, PageSegMode.SparseText))
+                {
+                    using (var iter = page.GetIterator())
+                    {
+                        iter.Begin();
+                        OCRWords.Clear();
+                        do
+                        {
+                            string w = iter.GetText(PageIteratorLevel.Word);
+
+                            if (!string.IsNullOrWhiteSpace(w))
+                                if (iter.TryGetBoundingBox(PageIteratorLevel.Word, out Tesseract.Rect rect))
+                                {
+                                    if (Regex.IsMatch(w, "[a-zA-Z]"))
+                                    {
+                                        Dispatcher.Invoke(() =>
+                                        {
+                                            System.Windows.Point p1 = Helper.RealPixelsToWpf(this, new System.Windows.Point(rect.X1, rect.Y1) + new Vector(wp1.X, wp1.Y));
+                                            System.Windows.Point p2 = Helper.RealPixelsToWpf(this, new System.Windows.Point(rect.X2, rect.Y2) + new Vector(wp1.X, wp1.Y));
+                                            OCRWords.Add(new OCRWord()
+                                            {
+                                                Rect = new RectangleF((float)p1.X, (float)p1.Y, (float)(p2.X - p1.X), (float)(p2.Y - p1.Y)),
+                                                Word = w,
+                                            });
+                                        });
+                                    }
+                                }
+                        } while (iter.Next(PageIteratorLevel.Word));
+                    }
+                }
+            });
+
+
+            engineBusy = false;
+            if (position.X < 0 && position.Y < 0)
+            {
+                Dispatcher.Invoke(() => progressLoading.Visibility = Visibility.Hidden);
+                return null;
+            }
+            OCRWord word = FindClosest(OCRWords, (float)position.X, (float)position.Y, strict);
+            if (word != null)
+            {
+                if (originalWord == null || word.Word.Trim().ToLower() != originalWord.Trim().ToLower())
+                    search(word.Word.Trim());
+            }
+            return word;
         }
 
         private async void Overlay_WordSelected(object sender, System.Windows.Point position)
         {
-            await Task.WhenAll(ocrTask);
-            if (position.X < 0 && position.Y < 0)
-            {
-                Dispatcher.Invoke(() => progressLoading.Visibility = Visibility.Hidden);
-                return;
-            }
-            OCRWord word = OCROverlay.FindClosest(OCRWords, (float)position.X, (float)position.Y);
-            if (word != null)
-            {
-                search(word.Word.Trim());
-            }
+            await OcrAtPoint(position, false);
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -391,12 +535,88 @@ namespace QuickDictionary
             }
         }
 
+        string originalWord;
+        string lastUrl;
+
+        SemaphoreSlim highlighterSemaphore = new SemaphoreSlim(1, 1);
+
+        async void updateHighlighter(string word, Dictionary dict)
+        {
+            try
+            {
+                await highlighterSemaphore.WaitAsync();
+                if (highlighter != null)
+                {
+                    Dictionary searchDict = null;
+                    await Helper.WaitUntil(() => browser.CanExecuteJavascriptInMainFrame);
+                    await Helper.WaitUntil(() => (string)browser.EvaluateScriptAsync("window.location.href").Result.Result != lastUrl);
+                    await Helper.WaitUntil(() =>
+                    {
+                        if (Uri.TryCreate(browser.Address, UriKind.RelativeOrAbsolute, out Uri uri))
+                        {
+                            if (uri.IsAbsoluteUri)
+                                searchDict = Dictionaries.FirstOrDefault(x => x.ValidateUrl(browser.Address).Result);
+                            else
+                                searchDict = null;
+                        }
+                        else
+                            searchDict = null;
+                        return dict == searchDict;
+                    }, frequency: 500, timeout: 10000);
+                    if (dict != null)
+                    {
+                        if (highlighter != null)
+                            highlighter.DictionaryName = dict.Name;
+                        string desc = "";
+                        await Helper.WaitUntil(() =>
+                        {
+                            try
+                            {
+                                desc = dict.GetDescription(browser).Result;
+                            }
+                            catch (Exception ex)
+                            {
+                                App.LogException(ex, ex.Source);
+                            }
+                            return !string.IsNullOrEmpty(desc);
+                        }, timeout: 10000);
+                        string headword = null;
+                        try
+                        {
+                            headword = await dict.GetWord(browser);
+                        }
+                        catch (Exception ex)
+                        {
+                            App.LogException(ex, ex.Source);
+                        }
+                        if (string.IsNullOrWhiteSpace(headword)) headword = word;
+
+                        if (highlighter != null)
+                        {
+                            highlighter.Description = desc;
+                            highlighter.Word = headword;
+                        }
+                    }
+                    else
+                    {
+                        highlighter.Description = "No definitions found";
+                    }
+                }
+                lastUrl = browser.Address;
+            }
+            finally
+            {
+                highlighterSemaphore.Release();
+            }
+        }
+
         async void search(string word)
         {
             if (word.Length < 100)
             {
                 if (Regex.IsMatch(word, "[a-zA-Z]"))
                 {
+                    originalWord = word;
                     txtWord.Text = word;
                     if (!ShowNewWordPanel)
                     {
@@ -433,11 +653,15 @@ namespace QuickDictionary
                             listSwitchDictionaries.SelectedItem = res;
                             stopSelectionUpdate = false;
 
+                            updateHighlighter(word, dicts[i]);
+
                             done = true;
                         }
                     }
                     if (!done)
+                    {
                         browser.Load("data:text/plain;base64,Tm8gcmVzdWx0cyBmb3VuZC4NClRyeSBlbmFibGluZyBtb3JlIGRpY3Rpb25hcmllcy4=");
+                    }
                 }
             }
         }
@@ -510,9 +734,50 @@ namespace QuickDictionary
             }
         }
 
-        private void btnOCR_Click(object sender, RoutedEventArgs e)
+        private void toggleOCRBtn(bool isOn)
         {
-            startOCR();
+            if (isOn)
+            {
+                btnOCR.Background = (SolidColorBrush)FindResource("PrimaryHueMidBrush");
+                btnOCR.Foreground = (SolidColorBrush)FindResource("PrimaryHueMidForegroundBrush");
+            }
+            else
+            {
+                btnOCR.Background = (SolidColorBrush)FindResource("MaterialDesignPaper");
+                btnOCR.Foreground = (SolidColorBrush)FindResource("PrimaryHueMidBrush");
+            }
+        }
+
+        private async void btnOCR_Click(object sender, RoutedEventArgs e)
+        {
+            if (AutoOcr)
+            {
+                AutoOcr = false;
+                toggleOCRBtn(false);
+                await Helper.WaitUntil(() => autoOcrTimer.IsEnabled);
+                autoOcrTimer.Stop();
+                if (highlighter != null)
+                {
+                    highlighter.Close();
+                    highlighter = null;
+                }
+                if (wordBitmap != null)
+                {
+                    wordBitmap.Dispose();
+                    wordBitmap = null;
+                }
+                return;
+            }
+            if (Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift))
+            {
+                AutoOcr = true;
+                toggleOCRBtn(true);
+                autoOcrTimer.Start();
+            }
+            else
+            {
+                startOCR();
+            }
         }
 
         public class AdBlockRequestHandler : RequestHandler
@@ -547,6 +812,16 @@ namespace QuickDictionary
 
         private async void mainWindow_Closing(object sender, CancelEventArgs e)
         {
+            if (highlighter != null)
+            {
+                highlighter.Close();
+                highlighter = null;
+            }
+            if (wordBitmap != null)
+            {
+                wordBitmap.Dispose();
+                wordBitmap = null;
+            }
             if (canExit)
             {
                 return;
@@ -1039,7 +1314,7 @@ namespace QuickDictionary
                 return new Uri(url).Host.Trim().ToLower().Contains("wikipedia.org");
             },
             ValidateQuery = async (url, word) =>
-            {   
+            {
                 return await Helper.GetFinalStatusCodeAsync(url) == HttpStatusCode.OK;
             },
             GetWord = async (browser) =>

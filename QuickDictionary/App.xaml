@@ -50,6 +50,12 @@
             <local:BoolInverseConverter
                 x:Key="BoolInverseConverter" />
 
+            <local:NullToVisibilityConverter
+                x:Key="NullToVisibilityConverter" />
+
+            <local:InverseNullToVisibilityConverter
+                x:Key="InverseNullToVisibilityConverter" />
+
             <Storyboard
                 x:Key="shakeStoryboard">
                 <!--<DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)">-->

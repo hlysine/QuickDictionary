@@ -15,6 +15,7 @@
     PreviewMouseMove="Canvas_PreviewMouseMove"
     PreviewMouseDown="Canvas_PreviewMouseDown"
     PreviewKeyDown="Window_PreviewKeyDown"
+    PreviewMouseWheel="Window_PreviewMouseWheel"
     Deactivated="Window_Deactivated">
     <Window.Triggers>
         <EventTrigger
@@ -24,7 +25,7 @@
                     <DoubleAnimation
                         Storyboard.TargetProperty="Opacity"
                         Storyboard.TargetName="imgBg"
-                        From="0"
+                        From="0.7"
                         To="1"
                         Duration="0:0:1"
                         FillBehavior="HoldEnd"
@@ -51,7 +52,9 @@
         <Canvas
             Name="canvas">
             <Border
-                Name="borderWord">
+                Name="borderWord"
+                BorderThickness="2"
+                BorderBrush="LightBlue">
                 <Border.Background>
                     <SolidColorBrush
                         Color="LightBlue"
