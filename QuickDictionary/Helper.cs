@@ -48,9 +48,20 @@ namespace QuickDictionary
             }
         }
 
-        public static async Task<string> GetInnerTextByXPath(this ChromiumWebBrowser browser, string xpath)
+        public static async Task<string> GetInnerTextByXPath(this ChromiumWebBrowser browser, params string[] xpath)
         {
-            var result = await browser.EvaluateScriptAsync(@"(function() { return document.evaluate(" + xpath.ToJSLiteral() + @", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue.innerText; })();");
+            StringBuilder sb = new StringBuilder();
+            sb.Append(@"(function() { return ");
+            for (int i = 0; i < xpath.Length; i++)
+            {
+                sb.Append(@"document.evaluate(" + xpath[i].ToJSLiteral() + @", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue.innerText");
+                if (i != xpath.Length - 1)
+                {
+                    sb.Append(@" + '\r\n' + ");
+                }
+            }
+            sb.Append(@";})();");
+            var result = await browser.EvaluateScriptAsync(sb.ToString());
             if (result.Success)
             {
                 return result.Result as string;
