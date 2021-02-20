@@ -1154,7 +1154,8 @@ namespace QuickDictionary
             },
             GetDescription = async (browser) =>
             {
-                return await browser.GetInnerTextByXPath(@"//div[contains(@class,""def ddef_d"")]");
+                return await browser.GetInnerTextByXPath(@"//div[contains(@class,""def ddef_d"")]") + Environment.NewLine +
+                    await browser.GetInnerTextByXPath(@"//span[contains(@class,""trans dtrans"")]");
             },
             Icon = PackIconKind.LetterCBox,
             Name = "Cambridge English-Chinese Dictionary",
