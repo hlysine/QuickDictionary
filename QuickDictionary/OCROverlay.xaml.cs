@@ -54,7 +54,7 @@ namespace QuickDictionary
             updateBorder(pos);
         }
 
-        private void Canvas_PreviewMouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        private void Canvas_PreviewMouseUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
             if (Selected) return;
             e.Handled = true;
@@ -83,7 +83,7 @@ namespace QuickDictionary
             NativeMethods.SetWindowLong(wndHelper.Handle, (int)NativeMethods.GetWindowLongFields.GWL_EXSTYLE, (IntPtr)exStyle);
         }
 
-        private void Window_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        private void Window_PreviewKeyUp(object sender, System.Windows.Input.KeyEventArgs e)
         {
             if (e.Key == System.Windows.Input.Key.Escape)
             {

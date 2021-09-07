@@ -13,8 +13,8 @@
     ShowInTaskbar="False"
     Loaded="Window_Loaded"
     PreviewMouseMove="Canvas_PreviewMouseMove"
-    PreviewMouseDown="Canvas_PreviewMouseDown"
-    PreviewKeyDown="Window_PreviewKeyDown"
+    PreviewMouseUp="Canvas_PreviewMouseUp"
+    PreviewKeyUp="Window_PreviewKeyUp"
     PreviewMouseWheel="Window_PreviewMouseWheel"
     Deactivated="Window_Deactivated">
     <Window.Triggers>
