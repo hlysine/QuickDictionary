@@ -8,12 +8,11 @@ The laziest way to use dictionaries.
 
 ## Table of contents
 
-- [QuickDictionary](#quickdictionary)
-  - [Downloads](#downloads)
-  - [How to use](#how-to-use)
-    - [Input a word](#input-a-word)
-    - [Look the word up in dictionaries](#look-the-word-up-in-dictionaries)
-    - [Save the word](#save-the-word)
+ - [Downloads](#downloads)
+ - [How to use](#how-to-use)
+   - [Input a word](#input-a-word)
+   - [Look the word up in dictionaries](#look-the-word-up-in-dictionaries)
+   - [Save the word](#save-the-word)
  
 ## Downloads
 
