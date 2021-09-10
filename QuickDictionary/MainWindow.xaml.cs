@@ -485,7 +485,7 @@ namespace QuickDictionary
                 Adhosts.Add(match.Groups[1].Value);
             }
 
-            await Helper.WaitUntil(() => browser.IsBrowserInitialized);
+            await Helper.WaitUntil(() => Dispatcher.Invoke(() => browser.IsBrowserInitialized));
 
             // Initialize the clipboard now that we have a window source to use
             var windowClipboardManager = new ClipboardManager(this);
