@@ -71,13 +71,14 @@ namespace QuickDictionary
                     WordListsPath = conf.WordListsPath;
                     CaptureBoxWidth = conf.CaptureBoxWidth;
                     CaptureBoxWHRatio = conf.CaptureBoxWHRatio;
-                    timer.Start();
                 }
             }
             else
             {
                 SelectedDictionaries = MainWindow.Dictionaries.Select(x => x.Name).ToList();
+                save();
             }
+            timer.Start();
         }
     }
 }

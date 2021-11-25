@@ -424,8 +424,6 @@ namespace QuickDictionary
             Keyboard.Focus(txtWord);
             txtWord.Focus();
 
-            Config.LoadConfig();
-
             await WordListManager.LoadAllLists();
 
             Dictionaries.Add(Dictionary.CambridgeCE);
@@ -437,6 +435,9 @@ namespace QuickDictionary
             Dictionaries.Add(Dictionary.GoogleDefinitions);
             listDictionaries.ItemsSource = Dictionaries;
             listDictionaries.SelectedItems.Clear();
+
+            Config.LoadConfig();
+
             foreach (string dict in Config.SelectedDictionaries)
             {
                 Dictionary d = Dictionaries.FirstOrDefault(x => x.Name == dict);
