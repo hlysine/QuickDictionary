@@ -424,8 +424,6 @@ namespace QuickDictionary
             Keyboard.Focus(txtWord);
             txtWord.Focus();
 
-            await WordListManager.LoadAllLists();
-
             Dictionaries.Add(Dictionary.CambridgeCE);
             Dictionaries.Add(Dictionary.MedicalDictionary);
             Dictionaries.Add(Dictionary.OxfordLearnersDict);
@@ -437,6 +435,8 @@ namespace QuickDictionary
             listDictionaries.SelectedItems.Clear();
 
             Config.LoadConfig();
+
+            await WordListManager.LoadAllLists();
 
             foreach (string dict in Config.SelectedDictionaries)
             {
