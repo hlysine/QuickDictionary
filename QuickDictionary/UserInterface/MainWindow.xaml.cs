@@ -63,7 +63,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
     private bool engineBusy
     {
-        get => (Interlocked.CompareExchange(ref threadSafeEngineBusy, 1, 1) == 1);
+        get => Interlocked.CompareExchange(ref threadSafeEngineBusy, 1, 1) == 1;
         set
         {
             if (value) Interlocked.CompareExchange(ref threadSafeEngineBusy, 1, 0);
