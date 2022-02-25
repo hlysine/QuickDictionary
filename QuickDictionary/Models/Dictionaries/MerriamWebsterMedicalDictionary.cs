@@ -33,7 +33,7 @@ public class MerriamWebsterMedicalDictionary : Dictionary
 
     public override async Task<string> GetWordAsync(ChromiumWebBrowser browser)
     {
-        var headword = await browser.GetInnerTextByXPath(@"//h1[contains(@class,""hword"")]");
+        var headword = await browser.GetInnerTextByXPath(@"//h1[contains(@class,'hword')]");
         if (!string.IsNullOrWhiteSpace(headword))
             return headword;
         headword = Regex.Match(browser.Address, @"www\.merriam-webster\.com\/[\w-_]+\/([\w_-]+)").Groups[1].Value;
@@ -41,7 +41,7 @@ public class MerriamWebsterMedicalDictionary : Dictionary
     }
 
     public override async Task<string> GetDescriptionAsync(ChromiumWebBrowser browser)
-        => await browser.GetInnerTextByXPath(@"//span[@class=""dtText""]");
+        => await browser.GetInnerTextByXPath(@"//span[@class='dtText']");
 
     public override PackIconKind Icon => PackIconKind.MedicalBag;
 

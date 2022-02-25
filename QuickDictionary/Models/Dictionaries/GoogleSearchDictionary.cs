@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using CefSharp.Wpf;
 using MaterialDesignThemes.Wpf;
+using QuickDictionary.Utils;
 
 namespace QuickDictionary.Models.Dictionaries;
 
@@ -15,11 +16,11 @@ public class GoogleSearchDictionary : Dictionary
     public override Task<bool> ValidateQueryAsync(string url, string word) => Task.FromResult(true);
 
     // todo: try web-scraping google search
-    public override Task<string> GetWordAsync(ChromiumWebBrowser browser)
-        => Task.FromResult<string>(null);
+    public override async Task<string> GetWordAsync(ChromiumWebBrowser browser)
+        => await browser.GetInnerTextByXPath(@"//*[@data-dobid='hdw']");
 
-    public override Task<string> GetDescriptionAsync(ChromiumWebBrowser browser)
-        => Task.FromResult<string>(null);
+    public override async Task<string> GetDescriptionAsync(ChromiumWebBrowser browser)
+        => await browser.GetInnerTextByXPath(@"//*[@data-dobid='dfn']");
 
     public override PackIconKind Icon => PackIconKind.Google;
 

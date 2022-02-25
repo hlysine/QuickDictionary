@@ -20,7 +20,7 @@ public class WikipediaDictionary : Dictionary
 
     public override async Task<string> GetWordAsync(ChromiumWebBrowser browser)
     {
-        var headword = await browser.GetInnerTextByXPath(@"//div[@class=""page-heading""]");
+        var headword = await browser.GetInnerTextByXPath(@"//div[@class='page-heading']");
         if (!string.IsNullOrWhiteSpace(headword))
             return headword;
         var match = Regex.Match(browser.Address, @"wikipedia\.org\/w\/index\.php\?title=([^&]+)");
@@ -42,7 +42,7 @@ public class WikipediaDictionary : Dictionary
 
     public override async Task<string> GetDescriptionAsync(ChromiumWebBrowser browser)
     {
-        var res = await browser.GetInnerTextByXPath(@"(//div[@id=""bodyContent""]//p[not(@class)])[1]");
+        var res = await browser.GetInnerTextByXPath(@"(//div[@id='bodyContent']//p[not(@class)])[1]");
         if (res == null)
             return null;
         return Regex.Replace(res, @"\[\d+\]", "");

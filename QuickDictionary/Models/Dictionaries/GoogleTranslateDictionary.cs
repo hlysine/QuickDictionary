@@ -20,7 +20,7 @@ public class GoogleTranslateDictionary : Dictionary
         => Task.FromResult<string>(null);
 
     public override async Task<string> GetDescriptionAsync(ChromiumWebBrowser browser)
-        => await browser.GetInnerTextByXPath(@"//div[contains(@class,""J0lOec"")]");
+        => await browser.GetInnerTextByXPath(@"//div[contains(@class,'J0lOec')]");
 
     public override PackIconKind Icon => PackIconKind.GoogleTranslate;
 

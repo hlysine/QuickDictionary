@@ -19,10 +19,10 @@ public class OxfordAdvancedLearnersDictionary : Dictionary
 
     public override async Task<string> GetWordAsync(ChromiumWebBrowser browser)
     {
-        var headword = await browser.GetInnerTextByXPath(@"//h1[@class=""headword""]");
+        var headword = await browser.GetInnerTextByXPath(@"//h1[@class='headword']");
         if (!string.IsNullOrWhiteSpace(headword))
             return headword;
-        headword = await browser.GetInnerTextByXPath(@"//h2[@class=""h""]");
+        headword = await browser.GetInnerTextByXPath(@"//h2[@class='h']");
         if (!string.IsNullOrWhiteSpace(headword))
             return headword;
         headword = Regex.Match(browser.Address, @"www\.oxfordlearnersdictionaries\.com\/definition\/[\w-_]+\/([\w_-]+)").Groups[1].Value;
@@ -30,7 +30,7 @@ public class OxfordAdvancedLearnersDictionary : Dictionary
     }
 
     public override async Task<string> GetDescriptionAsync(ChromiumWebBrowser browser)
-        => await browser.GetInnerTextByXPath(@"//span[@class=""def""]");
+        => await browser.GetInnerTextByXPath(@"//span[@class='def']");
 
     public override PackIconKind Icon => PackIconKind.LetterOBox;
 

@@ -19,7 +19,7 @@ public class CambridgeEnglishChineseDictionary : Dictionary
 
     public override async Task<string> GetWordAsync(ChromiumWebBrowser browser)
     {
-        var headword = await browser.GetInnerTextByXPath(@"//span[contains(@class,""headword"")]");
+        var headword = await browser.GetInnerTextByXPath(@"//span[contains(@class,'headword')]");
         if (!string.IsNullOrWhiteSpace(headword))
             return headword;
         headword = Regex.Match(browser.Address, @"dictionary\.cambridge\.org\/dictionary\/[\w-_]+\/([\w_-]+)").Groups[1].Value;
@@ -27,7 +27,7 @@ public class CambridgeEnglishChineseDictionary : Dictionary
     }
 
     public override async Task<string> GetDescriptionAsync(ChromiumWebBrowser browser)
-        => await browser.GetInnerTextByXPath(@"//div[contains(@class,""def ddef_d"")]", @"//span[contains(@class,""trans dtrans"")]");
+        => await browser.GetInnerTextByXPath(@"//div[contains(@class,'def ddef_d')]", @"//span[contains(@class,'trans dtrans')]");
 
     public override PackIconKind Icon => PackIconKind.LetterCBox;
 
