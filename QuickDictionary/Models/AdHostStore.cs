@@ -12,7 +12,7 @@ public class AdHostStore
     public string[] AdHosts { get; private set; } = Array.Empty<string>();
 
     private static AdHostStore instance;
-    
+
     public static AdHostStore Instance => instance ??= new AdHostStore();
 
     public async Task DownloadHostListAsync()
@@ -29,11 +29,11 @@ public class AdHostStore
             hosts[i] = matches[i].Groups[1].Value;
         }
 
-        AdHosts = hosts;
+        AdHosts = hosts.OrderBy(x => x).ToArray();
     }
 
     public bool IsAdUrl(string url)
     {
-        return AdHosts.AsParallel().Any(url.Contains);
+        return Array.BinarySearch(AdHosts, new Uri(url).Host) >= 0;
     }
 }
