@@ -1,5 +1,6 @@
 # QuickDictionary
 
+[![CodeFactor](https://www.codefactor.io/repository/github/hlysine/quickdictionary/badge)](https://www.codefactor.io/repository/github/hlysine/quickdictionary)
 ![Release build](https://github.com/Henry-YSLin/QuickDictionary/workflows/Release%20build/badge.svg)
 ![CodeQL](https://github.com/Henry-YSLin/QuickDictionary/workflows/CodeQL/badge.svg)
 ![Build](https://github.com/Henry-YSLin/QuickDictionary/workflows/Build/badge.svg)
