@@ -214,7 +214,7 @@
                             <TextBox
                                 Name="txtWord"
                                 Margin="5"
-                                Style="{StaticResource MaterialDesignOutlinedTextFieldTextBox}"
+                                Style="{StaticResource MaterialDesignOutlinedTextBox}"
                                 materialDesign:HintAssist.Hint="Word"
                                 ToolTip="Enter a word (Alt+F)"
                                 PreviewKeyUp="txtWord_PreviewKeyUp" />
@@ -497,7 +497,7 @@
                                     <TextBox
                                         Name="txtNewWord"
                                         Margin="5"
-                                        Style="{StaticResource MaterialDesignOutlinedTextFieldTextBox}"
+                                        Style="{StaticResource MaterialDesignOutlinedTextBox}"
                                         materialDesign:HintAssist.Hint="Word"
                                         ToolTip="Word"
                                         TextChanged="txtNewWord_TextChanged" />
@@ -534,14 +534,14 @@
                                         Name="txtNewLink"
                                         Grid.Row="2"
                                         Margin="5"
-                                        Style="{StaticResource MaterialDesignOutlinedTextFieldTextBox}"
+                                        Style="{StaticResource MaterialDesignOutlinedTextBox}"
                                         materialDesign:HintAssist.Hint="Link"
                                         ToolTip="Link to entry in dictionary" />
                                     <TextBox
                                         Name="txtNewDesc"
                                         Grid.Row="3"
                                         Margin="5"
-                                        Style="{StaticResource MaterialDesignOutlinedTextFieldTextBox}"
+                                        Style="{StaticResource MaterialDesignOutlinedTextBox}"
                                         AcceptsReturn="True"
                                         TextWrapping="Wrap"
                                         VerticalAlignment="Stretch"

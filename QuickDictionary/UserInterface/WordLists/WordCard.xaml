@@ -276,7 +276,7 @@
                     <TextBox
                         Name="txtEditWord"
                         Margin="5"
-                        Style="{StaticResource MaterialDesignOutlinedTextFieldTextBox}"
+                        Style="{StaticResource MaterialDesignOutlinedTextBox}"
                         materialDesign:HintAssist.Hint="Word"
                         ToolTip="Word">
                         <TextBox.Text>
@@ -298,7 +298,7 @@
                         Name="txtEditLink"
                         Grid.Row="1"
                         Margin="5"
-                        Style="{StaticResource MaterialDesignOutlinedTextFieldTextBox}"
+                        Style="{StaticResource MaterialDesignOutlinedTextBox}"
                         materialDesign:HintAssist.Hint="Link"
                         ToolTip="Link to entry in dictionary">
                         <TextBox.Text>
@@ -316,7 +316,7 @@
                         Name="txtEditDesc"
                         Grid.Row="2"
                         Margin="5"
-                        Style="{StaticResource MaterialDesignOutlinedTextFieldTextBox}"
+                        Style="{StaticResource MaterialDesignOutlinedTextBox}"
                         AcceptsReturn="True"
                         TextWrapping="Wrap"
                         VerticalAlignment="Stretch"
