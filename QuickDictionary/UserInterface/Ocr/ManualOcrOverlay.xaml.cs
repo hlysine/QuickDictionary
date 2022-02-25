@@ -28,7 +28,7 @@ public partial class ManualOcrOverlay : Window
         InitializeComponent();
     }
 
-    public void SetBg(BitmapImage img)
+    public void SetBackground(BitmapImage img)
     {
         Dispatcher.Invoke(() =>
         {

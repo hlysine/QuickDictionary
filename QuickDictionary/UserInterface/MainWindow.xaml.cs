@@ -249,6 +249,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
     }
 
     private Bitmap screenshot;
+    private ManualOcrOverlay manualOcrOverlay;
 
     private async void startOcr()
     {
@@ -259,8 +260,11 @@ public partial class MainWindow : Window, INotifyPropertyChanged
             return;
         }
 
-        var overlay = new ManualOcrOverlay();
-        overlay.WordSelected += Overlay_WordSelected;
+        if (manualOcrOverlay is { IsLoaded: true })
+            return;
+        
+        manualOcrOverlay = new ManualOcrOverlay();
+        manualOcrOverlay.WordSelected += Overlay_WordSelected;
         screenshot = ScreenCapture.GetScreenshot();
         await Task.Run(() =>
         {
@@ -276,12 +280,12 @@ public partial class MainWindow : Window, INotifyPropertyChanged
                 bitmapImage.CacheOption = BitmapCacheOption.OnLoad;
                 bitmapImage.StreamSource = ms;
                 bitmapImage.EndInit();
-                overlay.SetBg(bitmapImage);
+                manualOcrOverlay.SetBackground(bitmapImage);
                 ms.Dispose();
             });
         });
         Dispatcher.Invoke(() => progressLoading.Visibility = Visibility.Visible);
-        overlay.ShowDialog();
+        manualOcrOverlay.ShowDialog();
     }
 
     private void unminimize()
@@ -301,7 +305,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
             txtWord.Focus();
             txtWord.SelectAll();
         }
-        else
+        else if (e.Key == Keys.G)
         {
             if (AutoOcr)
             {
