@@ -48,18 +48,18 @@ public partial class AutoOcrHighlighter : Window, INotifyPropertyChanged
         }
     }
 
-    const int padding = 3;
+    private const int padding = 3;
 
     public OcrEntry OcrEntry { get; set; }
 
-    public void SetWord(OcrEntry word)
+    public void SetWord(OcrEntry entry)
     {
-        OcrEntry = word;
-        Left = word.Rect.Left - padding;
-        Top = word.Rect.Top - padding;
-        Width = word.Rect.Width + padding * 2;
-        Height = word.Rect.Height + padding * 2 + 3;
-        this.word = word.Word;
+        OcrEntry = entry;
+        Left = entry.Rect.Left - padding;
+        Top = entry.Rect.Top - padding;
+        Width = entry.Rect.Width + padding * 2;
+        Height = entry.Rect.Height + padding * 2 + 3;
+        this.word = entry.Word;
     }
 
     public AutoOcrHighlighter()

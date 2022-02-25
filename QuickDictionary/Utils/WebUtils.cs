@@ -21,7 +21,7 @@ public static class WebUtils
         var newUrl = url;
         do
         {
-            HttpWebRequest req = null;
+            HttpWebRequest req;
             HttpWebResponse resp = null;
             try
             {
@@ -78,11 +78,10 @@ public static class WebUtils
             return HttpStatusCode.NotFound;
 
         var maxRedirectCount = 8;  // prevent infinite loops
-        var newUrl = url;
         var statusCode = HttpStatusCode.NotFound;
         do
         {
-            HttpWebRequest req = null;
+            HttpWebRequest req;
             HttpWebResponse resp = null;
             try
             {
@@ -91,6 +90,8 @@ public static class WebUtils
                 req.AllowAutoRedirect = false;
                 resp = (HttpWebResponse)await req.GetResponseAsync();
                 statusCode = resp.StatusCode;
+                string newUrl;
+
                 switch (resp.StatusCode)
                 {
                     case HttpStatusCode.OK:

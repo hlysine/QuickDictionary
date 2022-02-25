@@ -71,9 +71,9 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         }
     }
 
-    string title;
+    private string title;
 
-    int updateProgress;
+    private int updateProgress;
 
     public int UpdateProgress
     {
@@ -85,7 +85,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         }
     }
 
-    bool showNewWordPanel;
+    private bool showNewWordPanel;
 
     public bool ShowNewWordPanel
     {
@@ -97,7 +97,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         }
     }
 
-    string newListName;
+    private string newListName;
 
     public string NewListName
     {
@@ -159,9 +159,9 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
     private bool stopSelectionUpdate;
 
-    readonly SemaphoreSlim updateFinished = new(0, 1);
+    private readonly SemaphoreSlim updateFinished = new(0, 1);
 
-    readonly DispatcherTimer autoOcrTimer;
+    private readonly DispatcherTimer autoOcrTimer;
 
     public MainWindow()
     {
@@ -177,11 +177,11 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         autoOcrTimer.Tick += AutoOcrTimer_Tick;
     }
 
-    Point cursor;
-    DateTime cursorIdleSince;
-    AutoOcrHighlighter highlighter;
-    Bitmap wordBitmap;
-    bool autoLookUpDone;
+    private Point cursor;
+    private DateTime cursorIdleSince;
+    private AutoOcrHighlighter highlighter;
+    private Bitmap wordBitmap;
+    private bool autoLookUpDone;
 
     private async Task autoLookup(Point newCursor)
     {
@@ -248,7 +248,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         autoOcrTimer.Start();
     }
 
-    Bitmap screenshot;
+    private Bitmap screenshot;
 
     private async void startOcr()
     {
@@ -314,7 +314,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         }
     }
 
-    static OcrEntry findClosestOcrEntry(List<OcrEntry> ocrEntries, float x, float y, bool strict)
+    private static OcrEntry findClosestOcrEntry(List<OcrEntry> ocrEntries, float x, float y, bool strict)
     {
         var word = ocrEntries.FirstOrDefault(w => w.Rect.Contains(x, y));
 
@@ -335,7 +335,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         return null;
     }
 
-    async Task<OcrEntry> ocrAtPoint(Point position, bool strict)
+    private async Task<OcrEntry> ocrAtPoint(Point position, bool strict)
     {
         engineBusy = true;
         Pix tessImg;
@@ -526,7 +526,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
     private readonly SemaphoreSlim highlighterSemaphore = new(1, 1);
 
-    async void updateHighlighter(string word, Dictionary dict)
+    private async void updateHighlighter(string word, Dictionary dict)
     {
         try
         {
@@ -589,7 +589,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         }
     }
 
-    async void search(string word)
+    private async void search(string word)
     {
         if (word.Length < 100)
         {
@@ -793,7 +793,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         }
     }
 
-    bool canExit;
+    private bool canExit;
 
     private async void mainWindow_Closing(object sender, CancelEventArgs e)
     {
@@ -826,7 +826,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         }
     }
 
-    string lastWordUrl;
+    private string lastWordUrl;
 
     private async void btnNewWordPanel_Checked(object sender, RoutedEventArgs e)
     {

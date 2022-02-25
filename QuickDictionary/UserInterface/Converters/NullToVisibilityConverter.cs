@@ -5,7 +5,7 @@ using System.Windows.Data;
 
 namespace QuickDictionary.UserInterface.Converters;
 
-class NullToVisibilityConverter : IValueConverter
+internal class NullToVisibilityConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
     {

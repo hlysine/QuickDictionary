@@ -29,7 +29,7 @@ public partial class WordListBrowser : Window, INotifyPropertyChanged
         }
     }
 
-    string renameListName;
+    private string renameListName;
     public string RenameListName
     {
         get => renameListName;
