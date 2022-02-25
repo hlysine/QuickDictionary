@@ -13,7 +13,7 @@
     <OutputType>WinExe</OutputType>
     <RootNamespace>QuickDictionary</RootNamespace>
     <AssemblyName>QuickDictionary</AssemblyName>
-    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <WarningLevel>4</WarningLevel>
@@ -22,6 +22,7 @@
     <NuGetPackageImportStamp>
     </NuGetPackageImportStamp>
     <IsWebBootstrapper>false</IsWebBootstrapper>
+    <TargetFrameworkProfile />
     <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Disk</InstallFrom>
@@ -33,9 +34,10 @@
     <UpdateRequired>false</UpdateRequired>
     <MapFileExtensions>true</MapFileExtensions>
     <ApplicationRevision>0</ApplicationRevision>
-    <ApplicationVersion>1.5.6.0</ApplicationVersion>
+    <ApplicationVersion>1.6.0.0</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
+    <LangVersion>default</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -62,7 +64,6 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <DebugType>full</DebugType>
     <PlatformTarget>x64</PlatformTarget>
-    <LangVersion>7.3</LangVersion>
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
     <Prefer32Bit>true</Prefer32Bit>
@@ -73,7 +74,6 @@
     <Optimize>true</Optimize>
     <DebugType>pdbonly</DebugType>
     <PlatformTarget>x64</PlatformTarget>
-    <LangVersion>7.3</LangVersion>
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
     <Prefer32Bit>true</Prefer32Bit>
@@ -84,7 +84,6 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <DebugType>full</DebugType>
     <PlatformTarget>x86</PlatformTarget>
-    <LangVersion>7.3</LangVersion>
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
     <Prefer32Bit>true</Prefer32Bit>
@@ -95,7 +94,6 @@
     <Optimize>true</Optimize>
     <DebugType>pdbonly</DebugType>
     <PlatformTarget>x86</PlatformTarget>
-    <LangVersion>7.3</LangVersion>
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
     <Prefer32Bit>true</Prefer32Bit>
@@ -115,6 +113,10 @@
     </Reference>
     <Reference Include="HtmlAgilityPack, Version=1.11.29.0, Culture=neutral, PublicKeyToken=bd319b19eaf3b43a, processorArchitecture=MSIL">
       <HintPath>..\packages\HtmlAgilityPack.1.11.29\lib\Net45\HtmlAgilityPack.dll</HintPath>
+    </Reference>
+    <Reference Include="JetBrains.Annotations, Version=4242.42.42.42, Culture=neutral, PublicKeyToken=1010a0d8d6380325">
+      <HintPath>..\packages\JetBrains.Annotations.2022.1.0-eap3\lib\net20\JetBrains.Annotations.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="MaterialDesignColors, Version=1.2.7.1979, Culture=neutral, PublicKeyToken=df2a72020bd7962a, processorArchitecture=MSIL">
       <HintPath>..\packages\MaterialDesignColors.1.2.7\lib\net45\MaterialDesignColors.dll</HintPath>
@@ -177,75 +179,98 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="BoolInverseConverter.cs" />
-    <Compile Include="BoolToHVisibilityConverter.cs" />
-    <Compile Include="BoolToVisibilityConverter.cs" />
-    <Compile Include="Config.cs" />
-    <Compile Include="InstantOcrHighlighter.xaml.cs">
-      <DependentUpon>InstantOcrHighlighter.xaml</DependentUpon>
+    <Compile Include="Models\Configs\Config.cs" />
+    <Compile Include="Models\Configs\ConfigStore.cs" />
+    <Compile Include="Models\Dictionaries\CambridgeEnglishChineseDictionary.cs" />
+    <Compile Include="Models\Dictionaries\Dictionary.cs" />
+    <Compile Include="Models\Dictionaries\DictionaryDotCom.cs" />
+    <Compile Include="Models\Dictionaries\DictionaryLookupResult.cs" />
+    <Compile Include="Models\Dictionaries\DictionaryStore.cs" />
+    <Compile Include="Models\Dictionaries\GoogleSearchDictionary.cs" />
+    <Compile Include="Models\Dictionaries\GoogleTranslateDictionary.cs" />
+    <Compile Include="Models\Dictionaries\MerriamWebsterMedicalDictionary.cs" />
+    <Compile Include="Models\Dictionaries\OxfordAdvancedLearnersDictionary.cs" />
+    <Compile Include="Models\Dictionaries\WikipediaDictionary.cs" />
+    <Compile Include="Models\NotifyPropertyChanged.cs" />
+    <Compile Include="Models\WordLists\WordListFile.cs" />
+    <Compile Include="Models\WordLists\WordEntry.cs" />
+    <Compile Include="Models\WordLists\WordList.cs" />
+    <Compile Include="Models\WordLists\WordListStore.cs" />
+    <Compile Include="Native\ClipboardMonitor.cs" />
+    <Compile Include="Native\KeyboardHook.cs" />
+    <Compile Include="Native\NativeMethods.cs" />
+    <Compile Include="Native\ScreenCapture.cs" />
+    <Compile Include="UserInterface\Controls\ControlUtils.cs" />
+    <Compile Include="UserInterface\Controls\DictionaryDragAndDropListBox.cs" />
+    <Compile Include="UserInterface\Controls\DragAndDropListBox.cs" />
+    <Compile Include="UserInterface\Controls\ScrollParentWhenAtMax.cs" />
+    <Compile Include="UserInterface\Converters\BoolInverseConverter.cs" />
+    <Compile Include="UserInterface\Converters\BoolToHVisibilityConverter.cs" />
+    <Compile Include="UserInterface\Converters\BoolToVisibilityConverter.cs" />
+    <Compile Include="UserInterface\Converters\InverseNullToVisibilityConverter.cs" />
+    <Compile Include="UserInterface\Converters\NullToVisibilityConverter.cs" />
+    <Compile Include="UserInterface\MainWindow.xaml.cs">
+      <DependentUpon>MainWindow.xaml</DependentUpon>
+      <SubType>Code</SubType>
     </Compile>
-    <Compile Include="InstantTooltip.xaml.cs">
-      <DependentUpon>InstantTooltip.xaml</DependentUpon>
+    <Compile Include="UserInterface\OCR\AutoOcrHighlighter.xaml.cs">
+      <DependentUpon>AutoOcrHighlighter.xaml</DependentUpon>
     </Compile>
-    <Compile Include="InverseNullToVisibilityConverter.cs" />
-    <Compile Include="OCROverlay.xaml.cs">
-      <DependentUpon>OCROverlay.xaml</DependentUpon>
+    <Compile Include="UserInterface\OCR\AutoOcrTooltip.xaml.cs">
+      <DependentUpon>AutoOcrTooltip.xaml</DependentUpon>
     </Compile>
-    <Compile Include="ScreenCapture.cs" />
-    <Compile Include="ScrollParentWhenAtMax.cs" />
-    <Compile Include="WordCard.xaml.cs">
+    <Compile Include="UserInterface\OCR\ManualOcrOverlay.xaml.cs">
+      <DependentUpon>ManualOcrOverlay.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="UserInterface\Validation\WordListNameValidationRule.cs" />
+    <Compile Include="UserInterface\Validation\WordValidationRule.cs" />
+    <Compile Include="UserInterface\WordLists\WordCard.xaml.cs">
       <DependentUpon>WordCard.xaml</DependentUpon>
     </Compile>
-    <Compile Include="WordList.cs" />
-    <Compile Include="WordListItem.xaml.cs">
+    <Compile Include="UserInterface\WordLists\WordListItem.xaml.cs">
       <DependentUpon>WordListItem.xaml</DependentUpon>
     </Compile>
-    <Compile Include="WordLists.xaml.cs">
-      <DependentUpon>WordLists.xaml</DependentUpon>
+    <Compile Include="UserInterface\WordLists\WordListBrowser.xaml.cs">
+      <DependentUpon>WordListBrowser.xaml</DependentUpon>
     </Compile>
-    <Page Include="InstantOcrHighlighter.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="InstantTooltip.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="MainWindow.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
+    <Compile Include="Utils\BitmapUtils.cs" />
+    <Compile Include="Utils\MathUtils.cs" />
+    <Compile Include="Utils\TaskUtils.cs" />
+    <Compile Include="Utils\WebUtils.cs" />
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="ClipboardManager.cs" />
-    <Compile Include="DragAndDropListBox.cs" />
-    <Compile Include="Helper.cs" />
-    <Compile Include="KeyboardHook.cs" />
-    <Compile Include="MainWindow.xaml.cs">
-      <DependentUpon>MainWindow.xaml</DependentUpon>
-      <SubType>Code</SubType>
-    </Compile>
-    <Page Include="OCROverlay.xaml">
+    <Page Include="UserInterface\MainWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="UserInterface\OCR\AutoOcrHighlighter.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="WordCard.xaml">
+    <Page Include="UserInterface\OCR\AutoOcrTooltip.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="WordListItem.xaml">
+    <Page Include="UserInterface\OCR\ManualOcrOverlay.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="WordLists.xaml">
+    <Page Include="UserInterface\WordLists\WordCard.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UserInterface\WordLists\WordListItem.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UserInterface\WordLists\WordListBrowser.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="NativeMethods.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -259,7 +284,6 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
-    <Compile Include="NullToVisibilityConverter.cs" />
     <None Include="QuickDictionary.nuspec" />
     <Resource Include="ic_launcher.ico" />
     <EmbeddedResource Include="Properties\Resources.resx">
