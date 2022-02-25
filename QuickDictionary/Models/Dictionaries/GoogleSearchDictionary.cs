@@ -24,5 +24,5 @@ public class GoogleSearchDictionary : Dictionary
 
     public override PackIconKind Icon => PackIconKind.Google;
 
-    public override string Name => "Google Dictionary";
+    public override string Name => "Google Search";
 }
