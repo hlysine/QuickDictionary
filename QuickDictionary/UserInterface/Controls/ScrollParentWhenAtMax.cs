@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using System;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Interactivity;
@@ -11,20 +12,20 @@ public class ScrollParentWhenAtMax : Behavior<FrameworkElement>
     protected override void OnAttached()
     {
         base.OnAttached();
-        AssociatedObject.PreviewMouseWheel += PreviewMouseWheel;
+        AssociatedObject.PreviewMouseWheel += previewMouseWheel;
     }
 
     protected override void OnDetaching()
     {
-        AssociatedObject.PreviewMouseWheel -= PreviewMouseWheel;
+        AssociatedObject.PreviewMouseWheel -= previewMouseWheel;
         base.OnDetaching();
     }
 
-    private void PreviewMouseWheel(object sender, MouseWheelEventArgs e)
+    private void previewMouseWheel(object sender, MouseWheelEventArgs e)
     {
-        var scrollViewer = GetVisualChild<ScrollViewer>(AssociatedObject);
+        var scrollViewer = getVisualChild<ScrollViewer>(AssociatedObject);
         var scrollPos = scrollViewer.ContentVerticalOffset;
-        if ((scrollPos == scrollViewer.ScrollableHeight && e.Delta < 0)
+        if ((Math.Abs(scrollPos - scrollViewer.ScrollableHeight) < 1e-5 && e.Delta < 0)
             || (scrollPos == 0 && e.Delta > 0))
         {
             e.Handled = true;
@@ -34,7 +35,7 @@ public class ScrollParentWhenAtMax : Behavior<FrameworkElement>
         }
     }
 
-    private static T GetVisualChild<T>(DependencyObject parent) where T : Visual
+    private static T getVisualChild<T>(DependencyObject parent) where T : Visual
     {
         var child = default(T);
 
@@ -45,7 +46,7 @@ public class ScrollParentWhenAtMax : Behavior<FrameworkElement>
             child = v as T;
             if (child == null)
             {
-                child = GetVisualChild<T>(v);
+                child = getVisualChild<T>(v);
             }
             if (child != null)
             {

@@ -10,7 +10,7 @@ using QuickDictionary.Native;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
 using MouseEventArgs = System.Windows.Input.MouseEventArgs;
 
-namespace QuickDictionary.UserInterface.OCR;
+namespace QuickDictionary.UserInterface.Ocr;
 
 /// <summary>
 /// Interaction logic for OCROverlay.xaml

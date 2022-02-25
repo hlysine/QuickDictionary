@@ -4,13 +4,12 @@ using System.IO;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 using QuickDictionary.Models.Configs;
-using QuickDictionary.UserInterface;
 
 namespace QuickDictionary.Models.WordLists;
 
 public static class WordListStore
 {
-    public static ObservableCollection<WordListFile> WordListFiles { get; set; } = new();
+    public static ObservableCollection<WordListFile> WordListFiles { get; } = new();
 
     public static string WordListFolderPath
     {
@@ -25,7 +24,7 @@ public static class WordListStore
         }
     }
 
-    public static readonly ObservableCollection<string> DeletedPaths = new();
+    public static ObservableCollection<string> DeletedPaths { get; } = new();
 
     public static void CommitDeletions()
     {

@@ -42,7 +42,7 @@ internal static class NativeMethods
 
     [DllImport("user32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    public static extern bool PrintWindow(IntPtr hwnd, IntPtr hDC, uint nFlags);
+    public static extern bool PrintWindow(IntPtr hwnd, IntPtr hDc, uint nFlags);
 
     [DllImport("gdi32.dll")]
     public static extern bool BitBlt(IntPtr hdcDest, int xDest, int yDest, int
@@ -188,7 +188,7 @@ internal static class NativeMethods
         if (IntPtr.Size == 4)
         {
             // use SetWindowLong
-            var tempResult = IntSetWindowLong(hWnd, nIndex, IntPtrToInt32(dwNewLong));
+            var tempResult = IntSetWindowLong(hWnd, nIndex, intPtrToInt32(dwNewLong));
             error = Marshal.GetLastWin32Error();
             result = new IntPtr(tempResult);
         }
@@ -213,7 +213,7 @@ internal static class NativeMethods
     [DllImport("user32.dll", EntryPoint = "SetWindowLong", SetLastError = true)]
     private static extern Int32 IntSetWindowLong(IntPtr hWnd, int nIndex, Int32 dwNewLong);
 
-    private static int IntPtrToInt32(IntPtr intPtr)
+    private static int intPtrToInt32(IntPtr intPtr)
     {
         return unchecked((int)intPtr.ToInt64());
     }

@@ -10,17 +10,17 @@ namespace QuickDictionary.UserInterface.WordLists;
 /// </summary>
 public partial class WordListItem : UserControl
 {
-    public static readonly DependencyProperty EditListsProperty =
+    public static readonly DependencyProperty EDIT_LISTS_PROPERTY =
         DependencyProperty.Register("EditLists", typeof(bool), typeof(WordListItem), new
-            PropertyMetadata(false, EditListsChanged));
+            PropertyMetadata(false, editListsChanged));
 
     public bool EditLists
     {
-        get => (bool)GetValue(EditListsProperty);
-        set => SetValue(EditListsProperty, value);
+        get => (bool)GetValue(EDIT_LISTS_PROPERTY);
+        set => SetValue(EDIT_LISTS_PROPERTY, value);
     }
 
-    private static void EditListsChanged(DependencyObject d,
+    private static void editListsChanged(DependencyObject d,
         DependencyPropertyChangedEventArgs e)
     {
         if (d is WordListItem control)

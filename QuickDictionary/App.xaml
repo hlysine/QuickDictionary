@@ -1,7 +1,6 @@
 ﻿<Application x:Class="QuickDictionary.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:QuickDictionary"
              xmlns:converters="clr-namespace:QuickDictionary.UserInterface.Converters"
              StartupUri="UserInterface/MainWindow.xaml"
              Startup="Application_Startup"
@@ -58,7 +57,7 @@
                 x:Key="InverseNullToVisibilityConverter" />
 
             <Storyboard
-                x:Key="shakeStoryboard">
+                x:Key="ShakeStoryboard">
                 <!--<DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)">-->
                 <DoubleAnimationUsingKeyFrames
                     Storyboard.TargetName="mainWindow"

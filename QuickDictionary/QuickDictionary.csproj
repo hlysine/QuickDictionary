@@ -202,6 +202,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Models\AdHostStore.cs" />
     <Compile Include="Models\Configs\Config.cs" />
     <Compile Include="Models\Configs\ConfigStore.cs" />
     <Compile Include="Models\Dictionaries\CambridgeEnglishChineseDictionary.cs" />
@@ -236,13 +237,13 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="UserInterface\OCR\AutoOcrHighlighter.xaml.cs">
+    <Compile Include="UserInterface\Ocr\AutoOcrHighlighter.xaml.cs">
       <DependentUpon>AutoOcrHighlighter.xaml</DependentUpon>
     </Compile>
-    <Compile Include="UserInterface\OCR\AutoOcrTooltip.xaml.cs">
+    <Compile Include="UserInterface\Ocr\AutoOcrTooltip.xaml.cs">
       <DependentUpon>AutoOcrTooltip.xaml</DependentUpon>
     </Compile>
-    <Compile Include="UserInterface\OCR\ManualOcrOverlay.xaml.cs">
+    <Compile Include="UserInterface\Ocr\ManualOcrOverlay.xaml.cs">
       <DependentUpon>ManualOcrOverlay.xaml</DependentUpon>
     </Compile>
     <Compile Include="UserInterface\Validation\WordListNameValidationRule.cs" />
@@ -268,15 +269,15 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="UserInterface\OCR\AutoOcrHighlighter.xaml">
+    <Page Include="UserInterface\Ocr\AutoOcrHighlighter.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="UserInterface\OCR\AutoOcrTooltip.xaml">
+    <Page Include="UserInterface\Ocr\AutoOcrTooltip.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="UserInterface\OCR\ManualOcrOverlay.xaml">
+    <Page Include="UserInterface\Ocr\ManualOcrOverlay.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

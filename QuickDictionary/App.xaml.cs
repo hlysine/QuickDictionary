@@ -26,9 +26,9 @@ public partial class App : Application
             // completes!
             // ReSharper disable AccessToDisposedClosure
             SquirrelAwareApp.HandleEvents(
-                onInitialInstall: v => mgr.CreateShortcutForThisExe(),
-                onAppUpdate: v => mgr.CreateShortcutForThisExe(),
-                onAppUninstall: v =>
+                onInitialInstall: _ => mgr.CreateShortcutForThisExe(),
+                onAppUpdate: _ => mgr.CreateShortcutForThisExe(),
+                onAppUninstall: _ =>
                 {
                     mgr.RemoveShortcutForThisExe();
                     mgr.RemoveUninstallerRegistryEntry();
@@ -38,6 +38,7 @@ public partial class App : Application
         }
         catch (Exception)
         {
+            // expects an exception from Squirrel if this instance isn't installed
         }
 
         var settings = new CefSettings();
@@ -60,21 +61,21 @@ public partial class App : Application
             Current.Shutdown();
         }
 
-        SetupExceptionHandling();
+        setupExceptionHandling();
     }
 
-    private void SetupExceptionHandling()
+    private void setupExceptionHandling()
     {
-        AppDomain.CurrentDomain.UnhandledException += (s, e) =>
+        AppDomain.CurrentDomain.UnhandledException += (_, e) =>
             LogException((Exception)e.ExceptionObject, "AppDomain.CurrentDomain.UnhandledException");
 
-        DispatcherUnhandledException += (s, e) =>
+        DispatcherUnhandledException += (_, e) =>
         {
             LogException(e.Exception, "Application.Current.DispatcherUnhandledException");
             e.Handled = true;
         };
 
-        TaskScheduler.UnobservedTaskException += (s, e) =>
+        TaskScheduler.UnobservedTaskException += (_, e) =>
         {
             LogException(e.Exception, "TaskScheduler.UnobservedTaskException");
             e.SetObserved();
@@ -101,11 +102,13 @@ public partial class App : Application
         }
         catch (Exception)
         {
+            // It is possible for more exceptions to appear if the app is in a very bad state
         }
     }
 
     private void Application_Exit(object sender, ExitEventArgs e)
     {
         WordListStore.CommitDeletions();
+        appMutex.Dispose();
     }
 }

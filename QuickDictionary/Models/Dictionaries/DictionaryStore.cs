@@ -10,6 +10,7 @@ public class DictionaryStore
     public readonly ObservableCollection<Dictionary> Dictionaries = new();
 
     private static DictionaryStore instance;
+    
     public static DictionaryStore Instance => instance ??= new DictionaryStore();
 
     private DictionaryStore()

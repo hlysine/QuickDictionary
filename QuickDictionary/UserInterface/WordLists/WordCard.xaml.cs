@@ -13,17 +13,17 @@ namespace QuickDictionary.UserInterface.WordLists;
 /// </summary>
 public partial class WordCard : UserControl
 {
-    public static readonly DependencyProperty EditModeProperty =
+    public static readonly DependencyProperty EDIT_MODE_PROPERTY =
         DependencyProperty.Register("EditMode", typeof(bool), typeof(WordCard), new
-            PropertyMetadata(false, EditModeChanged));
+            PropertyMetadata(false, editModeChanged));
 
     public bool EditMode
     {
-        get => (bool)GetValue(EditModeProperty);
-        set => SetValue(EditModeProperty, value);
+        get => (bool)GetValue(EDIT_MODE_PROPERTY);
+        set => SetValue(EDIT_MODE_PROPERTY, value);
     }
 
-    private static void EditModeChanged(DependencyObject d,
+    private static void editModeChanged(DependencyObject d,
         DependencyPropertyChangedEventArgs e)
     {
         if (d is WordCard control)
@@ -34,17 +34,17 @@ public partial class WordCard : UserControl
     {
     }
 
-    public static readonly DependencyProperty FlashcardModeProperty =
+    public static readonly DependencyProperty FLASHCARD_MODE_PROPERTY =
         DependencyProperty.Register("FlashcardMode", typeof(bool), typeof(WordCard), new
-            PropertyMetadata(true, FlashcardModeChanged));
+            PropertyMetadata(true, flashcardModeChanged));
 
     public bool FlashcardMode
     {
-        get => (bool)GetValue(FlashcardModeProperty);
-        set => SetValue(FlashcardModeProperty, value);
+        get => (bool)GetValue(FLASHCARD_MODE_PROPERTY);
+        set => SetValue(FLASHCARD_MODE_PROPERTY, value);
     }
 
-    private static void FlashcardModeChanged(DependencyObject d,
+    private static void flashcardModeChanged(DependencyObject d,
         DependencyPropertyChangedEventArgs e)
     {
         if (d is WordCard control)
@@ -55,17 +55,17 @@ public partial class WordCard : UserControl
     {
     }
 
-    public static readonly DependencyProperty FlashcardFlippedProperty =
+    public static readonly DependencyProperty FLASHCARD_FLIPPED_PROPERTY =
         DependencyProperty.Register("FlashcardFlipped", typeof(bool), typeof(WordCard), new
-            PropertyMetadata(false, FlashcardFlippedChanged));
+            PropertyMetadata(false, flashcardFlippedChanged));
 
     public bool FlashcardFlipped
     {
-        get => (bool)GetValue(FlashcardFlippedProperty);
-        set => SetValue(FlashcardFlippedProperty, value);
+        get => (bool)GetValue(FLASHCARD_FLIPPED_PROPERTY);
+        set => SetValue(FLASHCARD_FLIPPED_PROPERTY, value);
     }
 
-    private static void FlashcardFlippedChanged(DependencyObject d,
+    private static void flashcardFlippedChanged(DependencyObject d,
         DependencyPropertyChangedEventArgs e)
     {
         if (d is WordCard control)

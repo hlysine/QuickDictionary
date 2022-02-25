@@ -4,7 +4,7 @@ using System.Windows;
 using System.Windows.Interop;
 using QuickDictionary.Native;
 
-namespace QuickDictionary.UserInterface.OCR;
+namespace QuickDictionary.UserInterface.Ocr;
 
 /// <summary>
 /// Interaction logic for AutoOcrHighlighter.xaml

@@ -25,7 +25,7 @@ public static class WebUtils
             HttpWebResponse resp = null;
             try
             {
-                req = (HttpWebRequest)HttpWebRequest.Create(url);
+                req = (HttpWebRequest)WebRequest.Create(url);
                 req.Method = "HEAD";
                 req.AllowAutoRedirect = false;
                 resp = (HttpWebResponse)await req.GetResponseAsync();
@@ -139,7 +139,6 @@ public static class WebUtils
         using var writer = new StringWriter();
         using var provider = CodeDomProvider.CreateProvider("JScript");
         provider.GenerateCodeFromExpression(new CodePrimitiveExpression(input), writer, null);
-        var tmp = writer.ToString();
         return writer.ToString();
     }
 

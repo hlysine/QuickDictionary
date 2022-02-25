@@ -12,17 +12,17 @@ public class DragAndDropListBox<T> : ListBox
 {
     private Point dragStartPoint;
 
-    private P FindVisualParent<P>(DependencyObject child)
-        where P : DependencyObject
+    private TParent FindVisualParent<TParent>(DependencyObject child)
+        where TParent : DependencyObject
     {
         var parentObject = VisualTreeHelper.GetParent(child);
         if (parentObject == null)
             return null;
 
-        if (parentObject is P parent)
+        if (parentObject is TParent parent)
             return parent;
 
-        return FindVisualParent<P>(parentObject);
+        return FindVisualParent<TParent>(parentObject);
     }
 
     public DragAndDropListBox()
@@ -54,7 +54,6 @@ public class DragAndDropListBox<T> : ListBox
             (Math.Abs(diff.X) > SystemParameters.MinimumHorizontalDragDistance ||
              Math.Abs(diff.Y) > SystemParameters.MinimumVerticalDragDistance))
         {
-            var lb = sender as ListBox;
             var lbi = FindVisualParent<ListBoxItem>(((DependencyObject)e.OriginalSource));
             if (lbi != null)
             {
@@ -77,12 +76,12 @@ public class DragAndDropListBox<T> : ListBox
                 var sourceIndex = Items.IndexOf(source);
                 var targetIndex = Items.IndexOf(target);
 
-                Move(source, sourceIndex, targetIndex);
+                move(source, sourceIndex, targetIndex);
             }
         }
     }
 
-    private void Move(T source, int sourceIndex, int targetIndex)
+    private void move(T source, int sourceIndex, int targetIndex)
     {
         if (sourceIndex < targetIndex)
         {

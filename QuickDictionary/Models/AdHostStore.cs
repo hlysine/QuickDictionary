@@ -1,0 +1,39 @@
+﻿using System;
+using System.IO;
+using System.Linq;
+using System.Net;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
+
+namespace QuickDictionary.Models;
+
+public class AdHostStore
+{
+    public string[] AdHosts { get; private set; } = Array.Empty<string>();
+
+    private static AdHostStore instance;
+    
+    public static AdHostStore Instance => instance ??= new AdHostStore();
+
+    public async Task DownloadHostListAsync()
+    {
+        var client = new WebClient();
+        var stream = await client.OpenReadTaskAsync("https://raw.githubusercontent.com/anudeepND/blacklist/master/adservers.txt");
+        var reader = new StreamReader(stream);
+        var content = await reader.ReadToEndAsync();
+        var matches = Regex.Matches(content, @"0\.0\.0\.0 (.+)");
+        var hosts = new string[matches.Count];
+
+        for (int i = 0; i < matches.Count; i++)
+        {
+            hosts[i] = matches[i].Groups[1].Value;
+        }
+
+        AdHosts = hosts;
+    }
+
+    public bool IsAdUrl(string url)
+    {
+        return AdHosts.AsParallel().Any(url.Contains);
+    }
+}

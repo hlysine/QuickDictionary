@@ -58,7 +58,7 @@ public sealed class KeyboardHook : IDisposable
     public KeyboardHook()
     {
         // register the event of the inner native window.
-        window.KeyPressed += delegate (object sender, KeyPressedEventArgs args)
+        window.KeyPressed += delegate (object _, KeyPressedEventArgs args)
         {
             if (KeyPressed != null)
                 KeyPressed(this, args);

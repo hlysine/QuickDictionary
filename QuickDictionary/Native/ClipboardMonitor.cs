@@ -10,15 +10,14 @@ public class ClipboardMonitor
 
     public ClipboardMonitor(Window windowSource)
     {
-        var source = PresentationSource.FromVisual(windowSource) as HwndSource;
-        if (source == null)
+        if (PresentationSource.FromVisual(windowSource) is not HwndSource source)
         {
             throw new ArgumentException(
-                "Window source MUST be initialized first, such as in the Window's OnSourceInitialized handler."
+                @"Window source MUST be initialized first, such as in the Window's OnSourceInitialized handler."
                 , nameof(windowSource));
         }
 
-        source.AddHook(WndProc);
+        source.AddHook(wndProc);
 
         // get window handle for interop
         var windowHandle = new WindowInteropHelper(windowSource).Handle;
@@ -32,9 +31,9 @@ public class ClipboardMonitor
         ClipboardChanged?.Invoke(this, EventArgs.Empty);
     }
 
-    private static readonly IntPtr wndProcSuccess = IntPtr.Zero;
+    private static readonly IntPtr wnd_proc_success = IntPtr.Zero;
 
-    private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
+    private IntPtr wndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
     {
         if (msg == NativeMethods.WM_CLIPBOARD_UPDATE)
         {
@@ -42,6 +41,6 @@ public class ClipboardMonitor
             handled = true;
         }
 
-        return wndProcSuccess;
+        return wnd_proc_success;
     }
 }

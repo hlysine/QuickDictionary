@@ -12,16 +12,15 @@ public static class TaskUtils
     /// <param name="frequency">The frequency at which the condition will be check, in milliseconds.</param>
     /// <param name="timeout">Timeout in milliseconds.</param>
     /// <exception cref="TimeoutException"></exception>
-    /// <returns></returns>
-    public static async Task WaitWhile(Func<bool> condition, int frequency = 25, int timeout = -1)
+    /// <returns>Whether this method exited without waiting for timeout. False if exited due to timeout.</returns>
+    public static async Task<bool> WaitWhile(Func<bool> condition, int frequency = 25, int timeout = -1)
     {
         var waitTask = Task.Run(async () =>
         {
             while (condition()) await Task.Delay(frequency);
         });
 
-        if (waitTask != await Task.WhenAny(waitTask, Task.Delay(timeout)))
-            return;
+        return waitTask == await Task.WhenAny(waitTask, Task.Delay(timeout));
     }
 
     /// <summary>
@@ -30,16 +29,14 @@ public static class TaskUtils
     /// <param name="condition">The break condition.</param>
     /// <param name="frequency">The frequency at which the condition will be checked.</param>
     /// <param name="timeout">The timeout in milliseconds.</param>
-    /// <returns></returns>
-    public static async Task WaitUntil(Func<bool> condition, int frequency = 25, int timeout = -1)
+    /// <returns>Whether this method exited without waiting for timeout. False if exited due to timeout.</returns>
+    public static async Task<bool> WaitUntil(Func<bool> condition, int frequency = 25, int timeout = -1)
     {
         var waitTask = Task.Run(async () =>
         {
             while (!condition()) await Task.Delay(frequency);
         });
 
-        if (waitTask != await Task.WhenAny(waitTask,
-                Task.Delay(timeout)))
-            return;
+        return waitTask == await Task.WhenAny(waitTask, Task.Delay(timeout));
     }
 }
