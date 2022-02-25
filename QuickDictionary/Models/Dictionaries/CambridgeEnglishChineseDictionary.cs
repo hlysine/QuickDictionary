@@ -15,7 +15,10 @@ public class CambridgeEnglishChineseDictionary : Dictionary
         => new Uri(url).Host.Trim().ToLower().Contains("cambridge.org");
 
     public override async Task<bool> ValidateQueryAsync(string url, string word)
-        => !(await WebUtils.GetFinalRedirectAsync(url)).Contains("spellcheck");
+    {
+        string finalUrl = await WebUtils.GetFinalRedirectAsync(url);
+        return !finalUrl.Contains("spellcheck") && !finalUrl.EndsWith("english-chinese-traditional/");
+    }
 
     public override async Task<string> GetWordAsync(ChromiumWebBrowser browser)
     {
