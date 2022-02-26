@@ -18,7 +18,25 @@ namespace QuickDictionary.UserInterface.WordLists;
 /// </summary>
 public partial class WordListBrowser : Window, INotifyPropertyChanged
 {
+    private readonly MainWindow mainWindow;
     private bool editLists;
+
+    private string renameListName;
+
+    private WordListFile renamingList;
+
+    private WordListFile selectedWordList;
+
+    public WordListBrowser(MainWindow mainWindow)
+    {
+        InitializeComponent();
+        this.mainWindow = mainWindow;
+        ControlUtils.HideBoundingBox(root);
+        listWordLists.ItemsSource = WordListStore.WordListFiles;
+        checkTopmost.IsSelected = ConfigStore.Instance.Config.WordListManagerAlwaysOnTop;
+        drawerHost.IsLeftDrawerOpen = true;
+    }
+
     public bool EditLists
     {
         get => editLists;
@@ -29,7 +47,6 @@ public partial class WordListBrowser : Window, INotifyPropertyChanged
         }
     }
 
-    private string renameListName;
     public string RenameListName
     {
         get => renameListName;
@@ -40,7 +57,6 @@ public partial class WordListBrowser : Window, INotifyPropertyChanged
         }
     }
 
-    private WordListFile selectedWordList;
     public WordListFile SelectedWordList
     {
         get => selectedWordList;
@@ -52,20 +68,6 @@ public partial class WordListBrowser : Window, INotifyPropertyChanged
     }
 
     public event PropertyChangedEventHandler PropertyChanged;
-
-    private WordListFile renamingList;
-
-    private readonly MainWindow mainWindow;
-
-    public WordListBrowser(MainWindow mainWindow)
-    {
-        InitializeComponent();
-        this.mainWindow = mainWindow;
-        ControlUtils.HideBoundingBox(root);
-        listWordLists.ItemsSource = WordListStore.WordListFiles;
-        checkTopmost.IsSelected = ConfigStore.Instance.Config.WordListManagerAlwaysOnTop;
-        drawerHost.IsLeftDrawerOpen = true;
-    }
 
     private void btnFlipToBack_Click(object sender, RoutedEventArgs e)
     {
@@ -86,13 +88,15 @@ public partial class WordListBrowser : Window, INotifyPropertyChanged
     private void WordCard_DeleteWord(object sender, EventArgs e)
     {
         if (SelectedWordList == null) return;
+
         if ((sender as WordCard)?.DataContext is WordEntry entry)
         {
             if (SelectedWordList.WordList == null || SelectedWordList.WordList.Entries == null) return;
             snackbarMain.MessageQueue.Enqueue(
                 entry.Word + " deleted",
                 "UNDO",
-                obj => {
+                obj =>
+                {
                     obj.SelectedWordList.WordList.Entries.Insert(obj.Item2, obj.entry);
                     WordListStore.SaveWordList(obj.SelectedWordList);
                 },
@@ -116,15 +120,16 @@ public partial class WordListBrowser : Window, INotifyPropertyChanged
         if ((sender as WordListItem)?.DataContext is WordListFile entry)
         {
             snackbar.MessageQueue.Enqueue(
-                entry.WordList.Name + " deleted", 
-                "UNDO", 
-                pair => { 
+                entry.WordList.Name + " deleted",
+                "UNDO",
+                pair =>
+                {
                     WordListStore.WordListFiles.Insert(pair.Item1, pair.entry);
                     WordListStore.DeletedPaths.Remove(pair.entry.FilePath);
-                }, 
-                (WordListStore.WordListFiles.IndexOf(entry), entry), 
-                false, 
-                true, 
+                },
+                (WordListStore.WordListFiles.IndexOf(entry), entry),
+                false,
+                true,
                 TimeSpan.FromSeconds(5));
             WordListStore.WordListFiles.Remove(entry);
             WordListStore.DeletedPaths.Add(entry.FilePath);
@@ -134,6 +139,7 @@ public partial class WordListBrowser : Window, INotifyPropertyChanged
     private void WordListItem_RenameList(object sender, EventArgs e)
     {
         renamingList = (sender as WordListItem)?.DataContext as WordListFile;
+
         if (renamingList != null)
         {
             RenameListName = renamingList.WordList.Name;
@@ -152,7 +158,8 @@ public partial class WordListBrowser : Window, INotifyPropertyChanged
             txtRenameListName.SelectAll();
             return;
         }
-        var newPath = Path.Combine(Path.GetDirectoryName(renamingList.FilePath) ?? string.Empty, txtRenameListName.Text + ".xml");
+
+        string newPath = Path.Combine(Path.GetDirectoryName(renamingList.FilePath) ?? string.Empty, txtRenameListName.Text + ".xml");
         File.Move(renamingList.FilePath, newPath);
         renamingList.WordList.Name = txtRenameListName.Text;
         renamingList.FilePath = newPath;

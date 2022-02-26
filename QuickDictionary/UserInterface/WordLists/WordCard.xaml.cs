@@ -17,10 +17,36 @@ public partial class WordCard : UserControl
         DependencyProperty.Register("EditMode", typeof(bool), typeof(WordCard), new
             PropertyMetadata(false, editModeChanged));
 
+    public static readonly DependencyProperty FLASHCARD_MODE_PROPERTY =
+        DependencyProperty.Register("FlashcardMode", typeof(bool), typeof(WordCard), new
+            PropertyMetadata(true, flashcardModeChanged));
+
+    public static readonly DependencyProperty FLASHCARD_FLIPPED_PROPERTY =
+        DependencyProperty.Register("FlashcardFlipped", typeof(bool), typeof(WordCard), new
+            PropertyMetadata(false, flashcardFlippedChanged));
+
+    public WordCard()
+    {
+        InitializeComponent();
+        ControlUtils.HideBoundingBox(root);
+    }
+
     public bool EditMode
     {
         get => (bool)GetValue(EDIT_MODE_PROPERTY);
         set => SetValue(EDIT_MODE_PROPERTY, value);
+    }
+
+    public bool FlashcardMode
+    {
+        get => (bool)GetValue(FLASHCARD_MODE_PROPERTY);
+        set => SetValue(FLASHCARD_MODE_PROPERTY, value);
+    }
+
+    public bool FlashcardFlipped
+    {
+        get => (bool)GetValue(FLASHCARD_FLIPPED_PROPERTY);
+        set => SetValue(FLASHCARD_FLIPPED_PROPERTY, value);
     }
 
     private static void editModeChanged(DependencyObject d,
@@ -34,16 +60,6 @@ public partial class WordCard : UserControl
     {
     }
 
-    public static readonly DependencyProperty FLASHCARD_MODE_PROPERTY =
-        DependencyProperty.Register("FlashcardMode", typeof(bool), typeof(WordCard), new
-            PropertyMetadata(true, flashcardModeChanged));
-
-    public bool FlashcardMode
-    {
-        get => (bool)GetValue(FLASHCARD_MODE_PROPERTY);
-        set => SetValue(FLASHCARD_MODE_PROPERTY, value);
-    }
-
     private static void flashcardModeChanged(DependencyObject d,
         DependencyPropertyChangedEventArgs e)
     {
@@ -53,16 +69,6 @@ public partial class WordCard : UserControl
 
     private void FlashcardModeChanged(DependencyPropertyChangedEventArgs e)
     {
-    }
-
-    public static readonly DependencyProperty FLASHCARD_FLIPPED_PROPERTY =
-        DependencyProperty.Register("FlashcardFlipped", typeof(bool), typeof(WordCard), new
-            PropertyMetadata(false, flashcardFlippedChanged));
-
-    public bool FlashcardFlipped
-    {
-        get => (bool)GetValue(FLASHCARD_FLIPPED_PROPERTY);
-        set => SetValue(FLASHCARD_FLIPPED_PROPERTY, value);
     }
 
     private static void flashcardFlippedChanged(DependencyObject d,
@@ -80,12 +86,6 @@ public partial class WordCard : UserControl
     public event EventHandler DeleteWord;
     public event EventHandler NavigateWord;
 
-    public WordCard()
-    {
-        InitializeComponent();
-        ControlUtils.HideBoundingBox(root);
-    }
-
     private void Flipper_Click(object sender, RoutedEventArgs e)
     {
         FlashcardFlipped = !FlashcardFlipped;
@@ -99,6 +99,7 @@ public partial class WordCard : UserControl
             Keyboard.Focus(txtEditWord);
             txtEditWord.SelectAll();
         }
+
         EditMode = false;
         WordEdited?.Invoke(this, EventArgs.Empty);
     }

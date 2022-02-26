@@ -17,16 +17,18 @@ namespace QuickDictionary.UserInterface.Ocr;
 /// </summary>
 public partial class ManualOcrOverlay : Window
 {
-    public Point Selection { get; set; }
-    public bool Selected { get; set; }
-
     public delegate void WordSelectedHandler(object sender, Point position);
-    public event WordSelectedHandler WordSelected;
 
     public ManualOcrOverlay()
     {
         InitializeComponent();
     }
+
+    public Point Selection { get; set; }
+
+    public bool Selected { get; set; }
+
+    public event WordSelectedHandler WordSelected;
 
     public void SetBackground(BitmapImage img)
     {
@@ -47,7 +49,7 @@ public partial class ManualOcrOverlay : Window
     private void Canvas_PreviewMouseMove(object sender, MouseEventArgs e)
     {
         e.Handled = true;
-        var pos = e.GetPosition(this);
+        Point pos = e.GetPosition(this);
         updateBorder(pos);
     }
 
@@ -69,12 +71,12 @@ public partial class ManualOcrOverlay : Window
         Selected = true;
         Close();
     }
-            
+
     private void Window_Loaded(object sender, RoutedEventArgs e)
     {
         var wndHelper = new WindowInteropHelper(this);
 
-        var exStyle = (int)NativeMethods.GetWindowLong(wndHelper.Handle, (int)NativeMethods.GetWindowLongFields.GwlExStyle);
+        int exStyle = (int)NativeMethods.GetWindowLong(wndHelper.Handle, (int)NativeMethods.GetWindowLongFields.GwlExStyle);
 
         exStyle |= (int)NativeMethods.ExtendedWindowStyles.WsExToolWindow;
         NativeMethods.SetWindowLong(wndHelper.Handle, (int)NativeMethods.GetWindowLongFields.GwlExStyle, (IntPtr)exStyle);
@@ -83,9 +85,7 @@ public partial class ManualOcrOverlay : Window
     private void Window_PreviewKeyUp(object sender, KeyEventArgs e)
     {
         if (e.Key == Key.Escape)
-        {
             Window_Deactivated(this, EventArgs.Empty);
-        }
     }
 
     private void Window_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
@@ -94,7 +94,7 @@ public partial class ManualOcrOverlay : Window
         Console.WriteLine(e.Delta);
         ConfigStore.Instance.Config.CaptureBoxWidth = Math.Min(Screen.PrimaryScreen.Bounds.Width, Math.Max(50, ConfigStore.Instance.Config.CaptureBoxWidth));
         ConfigStore.Instance.SaveConfig();
-        var pos = e.GetPosition(this);
+        Point pos = e.GetPosition(this);
         updateBorder(pos);
     }
 }

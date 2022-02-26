@@ -5,6 +5,11 @@ public class WordListFile : NotifyPropertyChanged
     private string filePath;
     private WordList wordList;
 
+    public WordListFile(string path, WordList wordList)
+    {
+        (FilePath, WordList) = (path, wordList);
+    }
+
     public string FilePath
     {
         get => filePath;
@@ -16,6 +21,4 @@ public class WordListFile : NotifyPropertyChanged
         get => wordList;
         set => SetAndNotify(ref wordList, value);
     }
-
-    public WordListFile(string path, WordList wordList) => (FilePath, WordList) = (path, wordList);
 }

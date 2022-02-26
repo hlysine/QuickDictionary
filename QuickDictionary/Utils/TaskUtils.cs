@@ -15,7 +15,7 @@ public static class TaskUtils
     /// <returns>Whether this method exited without waiting for timeout. False if exited due to timeout.</returns>
     public static async Task<bool> WaitWhile(Func<bool> condition, int frequency = 25, int timeout = -1)
     {
-        var waitTask = Task.Run(async () =>
+        Task waitTask = Task.Run(async () =>
         {
             while (condition()) await Task.Delay(frequency);
         });
@@ -32,7 +32,7 @@ public static class TaskUtils
     /// <returns>Whether this method exited without waiting for timeout. False if exited due to timeout.</returns>
     public static async Task<bool> WaitUntil(Func<bool> condition, int frequency = 25, int timeout = -1)
     {
-        var waitTask = Task.Run(async () =>
+        Task waitTask = Task.Run(async () =>
         {
             while (!condition()) await Task.Delay(frequency);
         });

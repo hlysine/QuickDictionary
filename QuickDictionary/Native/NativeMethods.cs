@@ -8,8 +8,36 @@ namespace QuickDictionary.Native;
 
 internal static class NativeMethods
 {
+    public enum DisplayAffinity : uint
+    {
+        None = 0,
+        Monitor = 1,
+        ExcludeFromCapture = 3
+    }
+
+    [Flags]
+    public enum ExtendedWindowStyles
+    {
+        // ...
+        WsExToolWindow = 0x00000080
+        // ...
+    }
+
+    public enum GetWindowLongFields
+    {
+        // ...
+        GwlExStyle = -20
+        // ...
+    }
+
     // See http://msdn.microsoft.com/en-us/library/ms649021%28v=vs.85%29.aspx
     public const int WM_CLIPBOARD_UPDATE = 0x031D;
+
+    //Region Flags - The return value specifies the type of the region that the function obtains. It can be one of the following values.
+    public const int ERROR = 0;
+    public const int NULLREGION = 1;
+    public const int SIMPLEREGION = 2;
+    public const int COMPLEXREGION = 3;
     public static IntPtr HwndMessage = new(-3);
 
     // See http://msdn.microsoft.com/en-us/library/ms632599%28VS.85%29.aspx#message_only
@@ -20,18 +48,13 @@ internal static class NativeMethods
     // Registers a hot key with Windows.
     [DllImport("user32.dll")]
     internal static extern bool RegisterHotKey(IntPtr hWnd, int id, uint fsModifiers, uint vk);
+
     // Unregisters the hot key with Windows.
     [DllImport("user32.dll")]
     internal static extern bool UnregisterHotKey(IntPtr hWnd, int id);
 
     [DllImport("user32.dll")]
     public static extern int GetWindowRgn(IntPtr hWnd, IntPtr hRgn);
-
-    //Region Flags - The return value specifies the type of the region that the function obtains. It can be one of the following values.
-    public const int ERROR = 0;
-    public const int NULLREGION = 1;
-    public const int SIMPLEREGION = 2;
-    public const int COMPLEXREGION = 3;
 
     [DllImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
@@ -47,22 +70,80 @@ internal static class NativeMethods
     [DllImport("gdi32.dll")]
     public static extern bool BitBlt(IntPtr hdcDest, int xDest, int yDest, int
         wDest, int hDest, IntPtr hdcSource, int xSrc, int ySrc, CopyPixelOperation rop);
+
     [DllImport("user32.dll")]
     public static extern bool ReleaseDC(IntPtr hWnd, IntPtr hDc);
+
     [DllImport("gdi32.dll")]
     public static extern IntPtr DeleteDC(IntPtr hDc);
+
     [DllImport("gdi32.dll")]
     public static extern IntPtr DeleteObject(IntPtr hDc);
+
     [DllImport("gdi32.dll")]
     public static extern IntPtr CreateCompatibleBitmap(IntPtr hdc, int nWidth, int nHeight);
+
     [DllImport("gdi32.dll")]
     public static extern IntPtr CreateCompatibleDC(IntPtr hdc);
+
     [DllImport("gdi32.dll")]
     public static extern IntPtr SelectObject(IntPtr hdc, IntPtr bmp);
+
     [DllImport("user32.dll")]
     public static extern IntPtr GetDesktopWindow();
+
     [DllImport("user32.dll")]
     public static extern IntPtr GetWindowDC(IntPtr ptr);
+
+    [DllImport("user32.dll")]
+    public static extern IntPtr GetWindowLong(IntPtr hWnd, int nIndex);
+
+    public static IntPtr SetWindowLong(IntPtr hWnd, int nIndex, IntPtr dwNewLong)
+    {
+        int error = 0;
+        IntPtr result = IntPtr.Zero;
+        // Win32 SetWindowLong doesn't clear error on success
+        SetLastError(0);
+
+        if (IntPtr.Size == 4)
+        {
+            // use SetWindowLong
+            int tempResult = IntSetWindowLong(hWnd, nIndex, intPtrToInt32(dwNewLong));
+            error = Marshal.GetLastWin32Error();
+            result = new IntPtr(tempResult);
+        }
+        else
+        {
+            // use SetWindowLongPtr
+            result = IntSetWindowLongPtr(hWnd, nIndex, dwNewLong);
+            error = Marshal.GetLastWin32Error();
+        }
+
+        if (result == IntPtr.Zero && error != 0)
+            throw new Win32Exception(error);
+
+        return result;
+    }
+
+    [DllImport("user32.dll", EntryPoint = "SetWindowLongPtr", SetLastError = true)]
+    private static extern IntPtr IntSetWindowLongPtr(IntPtr hWnd, int nIndex, IntPtr dwNewLong);
+
+    [DllImport("user32.dll", EntryPoint = "SetWindowLong", SetLastError = true)]
+    private static extern int IntSetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
+
+    private static int intPtrToInt32(IntPtr intPtr)
+    {
+        return unchecked((int)intPtr.ToInt64());
+    }
+
+    [DllImport("kernel32.dll", EntryPoint = "SetLastError")]
+    public static extern void SetLastError(int dwErrorCode);
+
+    [DllImport("user32.dll")]
+    public static extern uint SetWindowDisplayAffinity(IntPtr hwnd, DisplayAffinity dwAffinity);
+
+    [DllImport("user32.dll", CharSet = CharSet.Auto)]
+    public static extern IntPtr SendMessage(IntPtr hWnd, int msg, int wParam, int lParam);
 
     [StructLayout(LayoutKind.Sequential)]
     public struct NativeRect
@@ -77,18 +158,29 @@ internal static class NativeMethods
             Bottom = bottom;
         }
 
-        public NativeRect(Rectangle r) : this(r.Left, r.Top, r.Right, r.Bottom) { }
+        public NativeRect(Rectangle r)
+            : this(r.Left, r.Top, r.Right, r.Bottom)
+        {
+        }
 
         public int X
         {
             get => Left;
-            set { Right -= Left - value; Left = value; }
+            set
+            {
+                Right -= Left - value;
+                Left = value;
+            }
         }
 
         public int Y
         {
             get => Top;
-            set { Bottom -= Top - value; Top = value; }
+            set
+            {
+                Bottom -= Top - value;
+                Top = value;
+            }
         }
 
         public int Height
@@ -106,13 +198,21 @@ internal static class NativeMethods
         public Point Location
         {
             get => new(Left, Top);
-            set { X = value.X; Y = value.Y; }
+            set
+            {
+                X = value.X;
+                Y = value.Y;
+            }
         }
 
         public Size Size
         {
             get => new(Width, Height);
-            set { Width = value.Width; Height = value.Height; }
+            set
+            {
+                Width = value.Width;
+                Height = value.Height;
+            }
         }
 
         public static implicit operator Rectangle(NativeRect r)
@@ -159,78 +259,4 @@ internal static class NativeMethods
             return string.Format(CultureInfo.CurrentCulture, "{{Left={0},Top={1},Right={2},Bottom={3}}}", Left, Top, Right, Bottom);
         }
     }
-
-    [Flags]
-    public enum ExtendedWindowStyles
-    {
-        // ...
-        WsExToolWindow = 0x00000080,
-        // ...
-    }
-
-    public enum GetWindowLongFields
-    {
-        // ...
-        GwlExStyle = -20,
-        // ...
-    }
-
-    [DllImport("user32.dll")]
-    public static extern IntPtr GetWindowLong(IntPtr hWnd, int nIndex);
-
-    public static IntPtr SetWindowLong(IntPtr hWnd, int nIndex, IntPtr dwNewLong)
-    {
-        var error = 0;
-        var result = IntPtr.Zero;
-        // Win32 SetWindowLong doesn't clear error on success
-        SetLastError(0);
-
-        if (IntPtr.Size == 4)
-        {
-            // use SetWindowLong
-            var tempResult = IntSetWindowLong(hWnd, nIndex, intPtrToInt32(dwNewLong));
-            error = Marshal.GetLastWin32Error();
-            result = new IntPtr(tempResult);
-        }
-        else
-        {
-            // use SetWindowLongPtr
-            result = IntSetWindowLongPtr(hWnd, nIndex, dwNewLong);
-            error = Marshal.GetLastWin32Error();
-        }
-
-        if (result == IntPtr.Zero && error != 0)
-        {
-            throw new Win32Exception(error);
-        }
-
-        return result;
-    }
-
-    [DllImport("user32.dll", EntryPoint = "SetWindowLongPtr", SetLastError = true)]
-    private static extern IntPtr IntSetWindowLongPtr(IntPtr hWnd, int nIndex, IntPtr dwNewLong);
-
-    [DllImport("user32.dll", EntryPoint = "SetWindowLong", SetLastError = true)]
-    private static extern Int32 IntSetWindowLong(IntPtr hWnd, int nIndex, Int32 dwNewLong);
-
-    private static int intPtrToInt32(IntPtr intPtr)
-    {
-        return unchecked((int)intPtr.ToInt64());
-    }
-
-    [DllImport("kernel32.dll", EntryPoint = "SetLastError")]
-    public static extern void SetLastError(int dwErrorCode);
-
-    [DllImport("user32.dll")]
-    public static extern uint SetWindowDisplayAffinity(IntPtr hwnd, DisplayAffinity dwAffinity); 
-
-    public enum DisplayAffinity : uint
-    {
-        None = 0,
-        Monitor = 1,
-        ExcludeFromCapture = 3
-    }
-
-    [DllImport("user32.dll", CharSet = CharSet.Auto)]
-    public static extern IntPtr SendMessage(IntPtr hWnd, int msg, int wParam, int lParam);
 }

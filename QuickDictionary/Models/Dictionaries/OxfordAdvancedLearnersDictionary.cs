@@ -9,17 +9,27 @@ namespace QuickDictionary.Models.Dictionaries;
 
 public class OxfordAdvancedLearnersDictionary : Dictionary
 {
-    public override string Url => "https://www.oxfordlearnersdictionaries.com/search/english/?q=%s";
+    protected override string Url => "https://www.oxfordlearnersdictionaries.com/search/english/?q=%s";
+
+    public override PackIconKind Icon => PackIconKind.LetterOBox;
+
+    public override string Name => "Oxford Advanced Learner's Dictionary";
 
     public override bool ValidateUrl(string url)
-        => new Uri(url).Host.Trim().ToLower().Contains("oxfordlearnersdictionaries.com");
+    {
+        return new Uri(url).Host.Trim().ToLower().Contains("oxfordlearnersdictionaries.com");
+    }
 
-    public override async Task<bool> ValidateQueryAsync(string url, string word)
-        => !(await WebUtils.GetFinalRedirectAsync(url)).Contains("spellcheck");
+    public override async Task<string> ExecuteQueryAsync(string word)
+    {
+        string url = await WebUtils.GetUrlAfterRedirect(GetUrl(word));
+
+        return !url.Contains("spellcheck") ? url : null;
+    }
 
     public override async Task<string> GetWordAsync(ChromiumWebBrowser browser)
     {
-        var headword = await browser.GetInnerTextByXPath(@"//h1[@class='headword']");
+        string headword = await browser.GetInnerTextByXPath(@"//h1[@class='headword']");
         if (!string.IsNullOrWhiteSpace(headword))
             return headword;
         headword = await browser.GetInnerTextByXPath(@"//h2[@class='h']");
@@ -30,9 +40,7 @@ public class OxfordAdvancedLearnersDictionary : Dictionary
     }
 
     public override async Task<string> GetDescriptionAsync(ChromiumWebBrowser browser)
-        => await browser.GetInnerTextByXPath(@"//span[@class='def']");
-
-    public override PackIconKind Icon => PackIconKind.LetterOBox;
-
-    public override string Name => "Oxford Advanced Learner's Dictionary";
+    {
+        return await browser.GetInnerTextByXPath(@"//span[@class='def']");
+    }
 }

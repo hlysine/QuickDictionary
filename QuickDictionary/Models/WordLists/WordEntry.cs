@@ -5,42 +5,43 @@ namespace QuickDictionary.Models.WordLists;
 
 public class WordEntry : NotifyPropertyChanged
 {
-    private string word;
-    private string url;
-    private string description;
     private DateTime created;
-    private DateTime lastModified;
+    private string description;
     private bool flashcardFlipped;
+    private DateTime lastModified;
+    private string url;
+    private string word;
 
     public string Word
     {
-        get => word; 
+        get => word;
         set => SetAndNotify(ref word, value);
     }
 
     public string Url
     {
-        get => url; 
+        get => url;
         set => SetAndNotify(ref url, value, new[] { nameof(DictionaryName) });
     }
 
     public string Description
     {
-        get => description; 
+        get => description;
         set => SetAndNotify(ref description, value);
     }
 
     public DateTime Created
     {
-        get => created; 
+        get => created;
         set => SetAndNotify(ref created, value, new[] { nameof(CreatedString) });
     }
 
     public DateTime LastModified
     {
-        get => lastModified; 
+        get => lastModified;
         set => SetAndNotify(ref lastModified, value);
     }
+
     public string CreatedString => created.ToString("d MMM, yyyy");
 
     public string DictionaryName

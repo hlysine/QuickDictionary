@@ -6,7 +6,7 @@ namespace QuickDictionary.Native;
 
 public class ClipboardMonitor
 {
-    public event EventHandler ClipboardChanged;
+    private static readonly IntPtr wnd_proc_success = IntPtr.Zero;
 
     public ClipboardMonitor(Window windowSource)
     {
@@ -20,18 +20,18 @@ public class ClipboardMonitor
         source.AddHook(wndProc);
 
         // get window handle for interop
-        var windowHandle = new WindowInteropHelper(windowSource).Handle;
+        IntPtr windowHandle = new WindowInteropHelper(windowSource).Handle;
 
         // register for clipboard events
         NativeMethods.AddClipboardFormatListener(windowHandle);
     }
 
+    public event EventHandler ClipboardChanged;
+
     private void OnClipboardChanged()
     {
         ClipboardChanged?.Invoke(this, EventArgs.Empty);
     }
-
-    private static readonly IntPtr wnd_proc_success = IntPtr.Zero;
 
     private IntPtr wndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
     {

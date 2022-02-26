@@ -17,17 +17,19 @@ namespace QuickDictionary;
 /// </summary>
 public partial class App : Application
 {
+    private Mutex appMutex;
+
     public App()
     {
         try
         {
-            using var mgr = UpdateManager.GitHubUpdateManager("https://github.com/Henry-YSLin/QuickDictionary").Result;
+            using UpdateManager mgr = UpdateManager.GitHubUpdateManager("https://github.com/Henry-YSLin/QuickDictionary").Result;
             // Note, in most of these scenarios, the app exits after this method
             // completes!
             // ReSharper disable AccessToDisposedClosure
             SquirrelAwareApp.HandleEvents(
-                onInitialInstall: _ => mgr.CreateShortcutForThisExe(),
-                onAppUpdate: _ => mgr.CreateShortcutForThisExe(),
+                _ => mgr.CreateShortcutForThisExe(),
+                _ => mgr.CreateShortcutForThisExe(),
                 onAppUninstall: _ =>
                 {
                     mgr.RemoveShortcutForThisExe();
@@ -51,15 +53,11 @@ public partial class App : Application
         Cef.Initialize(settings);
     }
 
-    private Mutex appMutex;
-
     private void Application_Startup(object sender, StartupEventArgs e)
     {
-        appMutex = new Mutex(true, "QuickDictionary", out var isNewInstance);
+        appMutex = new Mutex(true, "QuickDictionary", out bool isNewInstance);
         if (!isNewInstance)
-        {
             Current.Shutdown();
-        }
 
         setupExceptionHandling();
     }
@@ -86,9 +84,10 @@ public partial class App : Application
     {
         var message = new StringBuilder();
         message.AppendLine($"[{DateTime.Now:R}] Exception ({source})");
+
         try
         {
-            var assemblyName = Assembly.GetExecutingAssembly().GetName();
+            AssemblyName assemblyName = Assembly.GetExecutingAssembly().GetName();
             message.AppendLine($" in {assemblyName.Name} v{assemblyName.Version}");
             message.AppendLine(exception.Message);
             message.AppendLine(exception.StackTrace);
@@ -96,9 +95,7 @@ public partial class App : Application
             message.AppendLine();
             File.AppendAllText(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "QuickDictionary\\log.txt"), message.ToString());
             if (exception.InnerException != null)
-            {
                 LogException(exception.InnerException, source + ".InnerException");
-            }
         }
         catch (Exception)
         {

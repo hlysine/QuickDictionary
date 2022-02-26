@@ -10,16 +10,25 @@ namespace QuickDictionary.Models.Dictionaries;
 
 public class MerriamWebsterMedicalDictionary : Dictionary
 {
-    public override string Url => "https://www.merriam-webster.com/medical/%s";
+    protected override string Url => "https://www.merriam-webster.com/medical/%s";
+
+    public override PackIconKind Icon => PackIconKind.MedicalBag;
+
+    public override string Name => "Merriam-Webster Medical Dictionary";
 
     public override bool ValidateUrl(string url)
-        => new Uri(url).Host.Trim().ToLower().Contains("merriam-webster.com");
-
-    public override async Task<bool> ValidateQueryAsync(string url, string word)
     {
-        return await WebUtils.GetFinalStatusCodeAsync(url) == HttpStatusCode.OK;
+        return new Uri(url).Host.Trim().ToLower().Contains("merriam-webster.com");
+    }
+
+    public override async Task<string> ExecuteQueryAsync(string word)
+    {
+        HttpWebResponse response = await WebUtils.GetResponseAfterRedirect(GetUrl(word));
+
+        return response.StatusCode == HttpStatusCode.OK ? response.ResponseUri.AbsoluteUri : null;
+
         //var web = new HtmlWeb();
-        //var doc = await web.LoadFromWebAsync(url);
+        //var doc = await web.LoadFromWebAsync(GetUrl(word));
         //if (web.StatusCode != System.Net.HttpStatusCode.OK)
         //{
         //    return false;
@@ -33,7 +42,7 @@ public class MerriamWebsterMedicalDictionary : Dictionary
 
     public override async Task<string> GetWordAsync(ChromiumWebBrowser browser)
     {
-        var headword = await browser.GetInnerTextByXPath(@"//h1[contains(@class,'hword')]");
+        string headword = await browser.GetInnerTextByXPath(@"//h1[contains(@class,'hword')]");
         if (!string.IsNullOrWhiteSpace(headword))
             return headword;
         headword = Regex.Match(browser.Address, @"www\.merriam-webster\.com\/[\w-_]+\/([\w_-]+)").Groups[1].Value;
@@ -41,9 +50,7 @@ public class MerriamWebsterMedicalDictionary : Dictionary
     }
 
     public override async Task<string> GetDescriptionAsync(ChromiumWebBrowser browser)
-        => await browser.GetInnerTextByXPath(@"//span[@class='dtText']");
-
-    public override PackIconKind Icon => PackIconKind.MedicalBag;
-
-    public override string Name => "Merriam-Webster Medical Dictionary";
+    {
+        return await browser.GetInnerTextByXPath(@"//span[@class='dtText']");
+    }
 }

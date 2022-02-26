@@ -1,5 +1,6 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
 
 namespace QuickDictionary.UserInterface.Controls;
 
@@ -12,10 +13,8 @@ public static class ControlUtils
 
         if (root is DependencyObject dependencyObject)
         {
-            foreach (var child in LogicalTreeHelper.GetChildren(dependencyObject))
-            {
+            foreach (object child in LogicalTreeHelper.GetChildren(dependencyObject))
                 HideBoundingBox(child);
-            }
         }
     }
 
@@ -31,13 +30,13 @@ public static class ControlUtils
 
     public static Point RealPixelsToWpf(Window w, Point p)
     {
-        var t = PresentationSource.FromVisual(w).CompositionTarget.TransformFromDevice;
+        Matrix t = PresentationSource.FromVisual(w).CompositionTarget.TransformFromDevice;
         return t.Transform(p);
     }
 
     public static Point WpfToRealPixels(Window w, Point p)
     {
-        var t = PresentationSource.FromVisual(w).CompositionTarget.TransformToDevice;
+        Matrix t = PresentationSource.FromVisual(w).CompositionTarget.TransformToDevice;
         return t.Transform(p);
     }
 }

@@ -12,7 +12,7 @@ public class WordListNameValidationRule : ValidationRule
     {
         if (!(value is string val))
             return new ValidationResult(false, "Name must be a string");
-            
+
         val = val.Trim().ToLower(cultureInfo);
         if (string.IsNullOrWhiteSpace(val))
             return new ValidationResult(false, "Name cannot be empty");

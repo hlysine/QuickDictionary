@@ -40,7 +40,7 @@
                     </Trigger>
                 </Style.Triggers>
             </Style>
-            
+
             <converters:BoolToVisibilityConverter
                 x:Key="BoolToVisibilityConverter" />
 
@@ -87,8 +87,8 @@
                     <SplineDoubleKeyFrame
                         KeyTime="00:00:00.4000000"
                         Value="0" />
-                </DoubleAnimationUsingKeyFrames >
-            </Storyboard >
+                </DoubleAnimationUsingKeyFrames>
+            </Storyboard>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

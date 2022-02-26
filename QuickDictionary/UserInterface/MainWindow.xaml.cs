@@ -6,7 +6,6 @@ using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -43,7 +42,9 @@ using ImageFormat = System.Drawing.Imaging.ImageFormat;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
 using ModifierKeys = QuickDictionary.Native.ModifierKeys;
 using NativeMethods = QuickDictionary.Native.NativeMethods;
+using Page = Tesseract.Page;
 using Point = System.Windows.Point;
+using Rect = Tesseract.Rect;
 
 namespace QuickDictionary.UserInterface;
 
@@ -52,116 +53,55 @@ namespace QuickDictionary.UserInterface;
 /// </summary>
 public partial class MainWindow : Window, INotifyPropertyChanged
 {
-    private readonly KeyboardHook keyHook = new();
+    private readonly DispatcherTimer autoOcrTimer;
 
-    private WordListBrowser wordListBrowser;
+    private readonly ObservableCollection<Dictionary> dictionaries = DictionaryStore.Instance.Dictionaries;
 
     private readonly TesseractEngine engine = new("data/tessdata", "eng", EngineMode.LstmOnly);
+
+    private readonly SemaphoreSlim highlighterSemaphore = new(1, 1);
+    private readonly KeyboardHook keyHook = new();
+
+    private readonly SemaphoreSlim updateFinished = new(0, 1);
+    private bool autoLookUpDone;
+
+    private bool autoOcr;
+
+    private bool canExit;
+
+    private Point cursor;
+    private DateTime cursorIdleSince;
+
+    private ObservableCollection<DictionaryLookupResult> dictionaryResults = new();
+    private AutoOcrHighlighter highlighter;
+    private string lastUrl;
+
+    private string lastWordUrl;
+    private ManualOcrOverlay manualOcrOverlay;
+
+    private string newListName;
+
+    private string originalWord;
+
+    private Bitmap screenshot;
+
+    private WordListFile selectedWordList;
+
+    private bool showNewWordPanel;
+
+    private bool stopSelectionUpdate;
+
+    private bool switchDictionaryExpanded;
 
     // default is false, set 1 for true.
     private int threadSafeEngineBusy;
 
-    private bool engineBusy
-    {
-        get => Interlocked.CompareExchange(ref threadSafeEngineBusy, 1, 1) == 1;
-        set
-        {
-            if (value) Interlocked.CompareExchange(ref threadSafeEngineBusy, 1, 0);
-            else Interlocked.CompareExchange(ref threadSafeEngineBusy, 0, 1);
-        }
-    }
-
     private string title;
 
     private int updateProgress;
+    private Bitmap wordBitmap;
 
-    public int UpdateProgress
-    {
-        get => updateProgress;
-        set
-        {
-            updateProgress = value;
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(UpdateProgress)));
-        }
-    }
-
-    private bool showNewWordPanel;
-
-    public bool ShowNewWordPanel
-    {
-        get => showNewWordPanel;
-        set
-        {
-            showNewWordPanel = value;
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ShowNewWordPanel)));
-        }
-    }
-
-    private string newListName;
-
-    public string NewListName
-    {
-        get => newListName;
-        set
-        {
-            newListName = value;
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(NewListName)));
-        }
-    }
-
-    private WordListFile selectedWordList;
-
-    public WordListFile SelectedWordList
-    {
-        get => selectedWordList;
-        set
-        {
-            selectedWordList = value;
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SelectedWordList)));
-        }
-    }
-
-    private ObservableCollection<DictionaryLookupResult> dictionaryResults = new();
-
-    public ObservableCollection<DictionaryLookupResult> DictionaryResults
-    {
-        get => dictionaryResults;
-        set
-        {
-            dictionaryResults = value;
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(DictionaryResults)));
-        }
-    }
-
-    private bool switchDictionaryExpanded;
-
-    public bool SwitchDictionaryExpanded
-    {
-        get => switchDictionaryExpanded;
-        set
-        {
-            switchDictionaryExpanded = value;
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SwitchDictionaryExpanded)));
-        }
-    }
-
-    private bool autoOcr;
-
-    public bool AutoOcr
-    {
-        get => autoOcr;
-        set
-        {
-            autoOcr = value;
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(AutoOcr)));
-        }
-    }
-
-    private bool stopSelectionUpdate;
-
-    private readonly SemaphoreSlim updateFinished = new(0, 1);
-
-    private readonly DispatcherTimer autoOcrTimer;
+    private WordListBrowser wordListBrowser;
 
     public MainWindow()
     {
@@ -177,11 +117,87 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         autoOcrTimer.Tick += AutoOcrTimer_Tick;
     }
 
-    private Point cursor;
-    private DateTime cursorIdleSince;
-    private AutoOcrHighlighter highlighter;
-    private Bitmap wordBitmap;
-    private bool autoLookUpDone;
+    private bool engineBusy
+    {
+        get => Interlocked.CompareExchange(ref threadSafeEngineBusy, 1, 1) == 1;
+        set
+        {
+            if (value) Interlocked.CompareExchange(ref threadSafeEngineBusy, 1, 0);
+            else Interlocked.CompareExchange(ref threadSafeEngineBusy, 0, 1);
+        }
+    }
+
+    public int UpdateProgress
+    {
+        get => updateProgress;
+        set
+        {
+            updateProgress = value;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(UpdateProgress)));
+        }
+    }
+
+    public bool ShowNewWordPanel
+    {
+        get => showNewWordPanel;
+        set
+        {
+            showNewWordPanel = value;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ShowNewWordPanel)));
+        }
+    }
+
+    public string NewListName
+    {
+        get => newListName;
+        set
+        {
+            newListName = value;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(NewListName)));
+        }
+    }
+
+    public WordListFile SelectedWordList
+    {
+        get => selectedWordList;
+        set
+        {
+            selectedWordList = value;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SelectedWordList)));
+        }
+    }
+
+    public ObservableCollection<DictionaryLookupResult> DictionaryResults
+    {
+        get => dictionaryResults;
+        set
+        {
+            dictionaryResults = value;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(DictionaryResults)));
+        }
+    }
+
+    public bool SwitchDictionaryExpanded
+    {
+        get => switchDictionaryExpanded;
+        set
+        {
+            switchDictionaryExpanded = value;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SwitchDictionaryExpanded)));
+        }
+    }
+
+    public bool AutoOcr
+    {
+        get => autoOcr;
+        set
+        {
+            autoOcr = value;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(AutoOcr)));
+        }
+    }
+
+    public event PropertyChangedEventHandler PropertyChanged;
 
     private async Task autoLookup(Point newCursor)
     {
@@ -190,8 +206,8 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         if (DateTime.Now - cursorIdleSince >= TimeSpan.FromSeconds(1) && !autoLookUpDone)
         {
             screenshot = ScreenCapture.GetScreenshot();
-            var orig = originalWord;
-            var word = await ocrAtPoint(newCursor, true);
+            string orig = originalWord;
+            OcrEntry word = await ocrAtPoint(newCursor, true);
 
             if (word != null && (orig == null || word.Word.Trim().ToLower() != orig.Trim().ToLower()))
             {
@@ -215,15 +231,15 @@ public partial class MainWindow : Window, INotifyPropertyChanged
     private async void AutoOcrTimer_Tick(object sender, EventArgs e)
     {
         autoOcrTimer.Stop();
-        var p = Control.MousePosition;
-        var newCursor = ControlUtils.RealPixelsToWpf(this, new Point(p.X, p.Y));
+        System.Drawing.Point p = Control.MousePosition;
+        Point newCursor = ControlUtils.RealPixelsToWpf(this, new Point(p.X, p.Y));
 
         if (highlighter != null)
         {
-            var word = highlighter.OcrEntry;
-            using var newBmp = ScreenCapture.GetScreenshot()
+            OcrEntry word = highlighter.OcrEntry;
+            using Bitmap newBmp = ScreenCapture.GetScreenshot()
                 .CropAtRect(new Rectangle((int)word.Rect.Left, (int)word.Rect.Top, (int)word.Rect.Width, (int)word.Rect.Height));
-            var pDiff = newBmp.PercentageDifference(wordBitmap);
+            float pDiff = newBmp.PercentageDifference(wordBitmap);
 
             if (pDiff > 0.15)
             {
@@ -235,9 +251,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         }
 
         if (newCursor == cursor)
-        {
             await autoLookup(newCursor);
-        }
         else
         {
             cursor = newCursor;
@@ -247,9 +261,6 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
         autoOcrTimer.Start();
     }
-
-    private Bitmap screenshot;
-    private ManualOcrOverlay manualOcrOverlay;
 
     private async void startOcr()
     {
@@ -262,7 +273,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
         if (manualOcrOverlay is { IsLoaded: true })
             return;
-        
+
         manualOcrOverlay = new ManualOcrOverlay();
         manualOcrOverlay.WordSelected += Overlay_WordSelected;
         screenshot = ScreenCapture.GetScreenshot();
@@ -309,8 +320,8 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         {
             if (AutoOcr)
             {
-                var p = Control.MousePosition;
-                var newCursor = ControlUtils.RealPixelsToWpf(this, new Point(p.X, p.Y));
+                System.Drawing.Point p = Control.MousePosition;
+                Point newCursor = ControlUtils.RealPixelsToWpf(this, new Point(p.X, p.Y));
                 await autoLookup(newCursor);
             }
             else
@@ -320,21 +331,17 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
     private static OcrEntry findClosestOcrEntry(List<OcrEntry> ocrEntries, float x, float y, bool strict)
     {
-        var word = ocrEntries.FirstOrDefault(w => w.Rect.Contains(x, y));
+        OcrEntry word = ocrEntries.FirstOrDefault(w => w.Rect.Contains(x, y));
 
         if (word != null)
-        {
             return word;
-        }
 
         word = strict
             ? ocrEntries.Where(w => w.Rect.DistanceToPoint(x, y) < 2).MinBy(w => w.Rect.DistanceToPoint(x, y)).FirstOrDefault()
             : ocrEntries.MinBy(w => w.Rect.DistanceToPoint(x, y)).FirstOrDefault();
 
         if (word != null)
-        {
             return word;
-        }
 
         return null;
     }
@@ -349,46 +356,48 @@ public partial class MainWindow : Window, INotifyPropertyChanged
             ConfigStore.Instance.Config.CaptureBoxWidth / 2,
             ConfigStore.Instance.Config.CaptureBoxWidth / ConfigStore.Instance.Config.CaptureBoxAspectRatio / 2
         );
-        var wp1 = ControlUtils.WpfToRealPixels(this, position - boxOffset);
-        var wp2 = ControlUtils.WpfToRealPixels(this, position + boxOffset);
+        Point wp1 = ControlUtils.WpfToRealPixels(this, position - boxOffset);
+        Point wp2 = ControlUtils.WpfToRealPixels(this, position + boxOffset);
 
         await Task.Run(() =>
         {
             using (var ms = new MemoryStream())
             {
-                var bmp = screenshot.CropAtRect(new Rectangle((int)wp1.X, (int)wp1.Y, (int)(wp2.X - wp1.X), (int)(wp2.Y - wp1.Y)));
+                Bitmap bmp = screenshot.CropAtRect(new Rectangle((int)wp1.X, (int)wp1.Y, (int)(wp2.X - wp1.X), (int)(wp2.Y - wp1.Y)));
                 bmp.Save(ms, ImageFormat.Png);
                 tessImg = Pix.LoadFromMemory(ms.ToArray());
             }
 
-            using (var page = engine.Process(tessImg, PageSegMode.SparseText))
+            using (Page page = engine.Process(tessImg, PageSegMode.SparseText))
             {
-                using (var iter = page.GetIterator())
+                using (ResultIterator iter = page.GetIterator())
                 {
                     iter.Begin();
                     ocrWords.Clear();
 
                     do
                     {
-                        var w = iter.GetText(PageIteratorLevel.Word);
+                        string w = iter.GetText(PageIteratorLevel.Word);
 
                         if (!string.IsNullOrWhiteSpace(w))
-                            if (iter.TryGetBoundingBox(PageIteratorLevel.Word, out var rect))
+                        {
+                            if (iter.TryGetBoundingBox(PageIteratorLevel.Word, out Rect rect))
                             {
                                 if (Regex.IsMatch(w, "[a-zA-Z]"))
                                 {
                                     Dispatcher.Invoke(() =>
                                     {
-                                        var p1 = ControlUtils.RealPixelsToWpf(this, new Point(rect.X1, rect.Y1) + new Vector(wp1.X, wp1.Y));
-                                        var p2 = ControlUtils.RealPixelsToWpf(this, new Point(rect.X2, rect.Y2) + new Vector(wp1.X, wp1.Y));
+                                        Point p1 = ControlUtils.RealPixelsToWpf(this, new Point(rect.X1, rect.Y1) + new Vector(wp1.X, wp1.Y));
+                                        Point p2 = ControlUtils.RealPixelsToWpf(this, new Point(rect.X2, rect.Y2) + new Vector(wp1.X, wp1.Y));
                                         ocrWords.Add(new OcrEntry
                                         {
                                             Rect = new RectangleF((float)p1.X, (float)p1.Y, (float)(p2.X - p1.X), (float)(p2.Y - p1.Y)),
-                                            Word = w,
+                                            Word = w
                                         });
                                     });
                                 }
                             }
+                        }
                     } while (iter.Next(PageIteratorLevel.Word));
                 }
             }
@@ -402,7 +411,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
             return null;
         }
 
-        var word = findClosestOcrEntry(ocrWords, (float)position.X, (float)position.Y, strict);
+        OcrEntry word = findClosestOcrEntry(ocrWords, (float)position.X, (float)position.Y, strict);
 
         if (word != null)
         {
@@ -418,10 +427,6 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         await ocrAtPoint(position, false);
     }
 
-    public event PropertyChangedEventHandler PropertyChanged;
-
-    private readonly ObservableCollection<Dictionary> dictionaries = DictionaryStore.Instance.Dictionaries;
-
     private async void Window_SourceInitialized(object sender, EventArgs e)
     {
         stopSelectionUpdate = true;
@@ -436,17 +441,15 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
         await WordListStore.LoadAllWordLists();
 
-        foreach (var dict in ConfigStore.Instance.Config.SelectedDictionaries)
+        foreach (string dict in ConfigStore.Instance.Config.SelectedDictionaries)
         {
-            var d = dictionaries.FirstOrDefault(x => x.Name == dict);
+            Dictionary d = dictionaries.FirstOrDefault(x => x.Name == dict);
             if (d != null)
                 listDictionaries.SelectedItems.Add(d);
         }
 
-        foreach (var dict in dictionaries)
-        {
+        foreach (Dictionary dict in dictionaries)
             dict.Precedence = listDictionaries.SelectedItems.IndexOf(dict) + 1;
-        }
 
         SelectedWordList = WordListStore.WordListFiles.FirstOrDefault(x => x.WordList.Name == ConfigStore.Instance.Config.LastWordListName);
         listWordListSelector.ItemsSource = WordListStore.WordListFiles;
@@ -483,7 +486,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         try
         {
             using var mgr = await UpdateManager.GitHubUpdateManager("https://github.com/Henry-YSLin/QuickDictionary");
-            var updateInfo = await mgr.CheckForUpdate(false, progress =>
+            UpdateInfo updateInfo = await mgr.CheckForUpdate(false, progress =>
             {
                 UpdateProgress = progress;
                 Dispatcher.Invoke(() => Title = title + $" - Checking {progress}%");
@@ -500,9 +503,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
                 Dispatcher.Invoke(() => Title = title + " - Restart app to update");
             }
             else
-            {
                 Dispatcher.Invoke(() => Title = title);
-            }
         }
         catch (Exception ex)
         {
@@ -519,16 +520,11 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         // Handle your clipboard update here, debug logging example:
         if (Clipboard.ContainsText())
         {
-            var word = Clipboard.GetText().Trim();
+            string word = Clipboard.GetText().Trim();
             progressLoading.Visibility = Visibility.Visible;
             search(word);
         }
     }
-
-    private string originalWord;
-    private string lastUrl;
-
-    private readonly SemaphoreSlim highlighterSemaphore = new(1, 1);
 
     private async void updateHighlighter(string word, Dictionary dict)
     {
@@ -546,7 +542,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
                 {
                     if (highlighter != null)
                         highlighter.DictionaryName = dict.Name;
-                    var desc = "";
+                    string desc = "";
                     await TaskUtils.WaitUntil(() =>
                     {
                         try
@@ -580,9 +576,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
                     }
                 }
                 else
-                {
                     highlighter.Description = "No definitions found";
-                }
             }
 
             lastUrl = browser.Address;
@@ -609,34 +603,35 @@ public partial class MainWindow : Window, INotifyPropertyChanged
                     txtWord.SelectAll();
                 }
 
-                var selectedDictionaries = listDictionaries.SelectedItems.Cast<Dictionary>().ToList();
-                var validations = new List<Task<bool>>();
+                List<Dictionary> selectedDictionaries = listDictionaries.SelectedItems.Cast<Dictionary>().ToList();
+                var queryTasks = new List<Task<string>>();
 
-                foreach (var dict in selectedDictionaries)
+                foreach (Dictionary dict in selectedDictionaries)
                 {
-                    var task = dict.ValidateQueryAsync(dict.Url.Replace("%s", WebUtility.UrlEncode(word)), word);
-                    validations.Add(task);
+                    Task<string> task = dict.ExecuteQueryAsync(word);
+                    queryTasks.Add(task);
                 }
 
-                if (validations.Count > 0)
-                    await Task.WhenAny(validations.ToArray());
-                var done = false;
+                if (queryTasks.Count > 0)
+                    await Task.WhenAny(queryTasks.ToArray());
+                bool done = false;
 
-                for (var i = 0; i < validations.Count; i++)
+                for (int i = 0; i < queryTasks.Count; i++)
                 {
-                    var res = DictionaryResults.FirstOrDefault(x => x.Dictionary == selectedDictionaries[i]);
-                    var validation = await validations[i];
+                    DictionaryLookupResult res = DictionaryResults.FirstOrDefault(x => x.Dictionary == selectedDictionaries[i]);
+                    string wordUrl = await queryTasks[i];
+                    bool isSuccess = wordUrl != null;
 
                     if (res != null)
                     {
-                        res.HasEntry = validation;
-                        res.TooltipText = validation ? $"View \"{word}\" in {selectedDictionaries[i].Name}" : $"No results of \"{word}\" in {selectedDictionaries[i].Name}";
-                        res.Url = selectedDictionaries[i].Url.Replace("%s", WebUtility.UrlEncode(word));
+                        res.HasEntry = isSuccess;
+                        res.TooltipText = isSuccess ? $"View \"{word}\" in {selectedDictionaries[i].Name}" : $"No results of \"{word}\" in {selectedDictionaries[i].Name}";
+                        res.Url = wordUrl;
                     }
 
-                    if (validation && !done)
+                    if (isSuccess && !done)
                     {
-                        browser.Load(selectedDictionaries[i].Url.Replace("%s", WebUtility.UrlEncode(word)));
+                        browser.Load(wordUrl);
 
                         stopSelectionUpdate = true;
                         listSwitchDictionaries.SelectedItem = res;
@@ -649,9 +644,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
                 }
 
                 if (!done)
-                {
                     browser.Load("data:text/plain;base64,Tm8gcmVzdWx0cyBmb3VuZC4NClRyeSBlbmFibGluZyBtb3JlIGRpY3Rpb25hcmllcy4=");
-                }
             }
         }
     }
@@ -669,12 +662,10 @@ public partial class MainWindow : Window, INotifyPropertyChanged
     {
         if (stopSelectionUpdate) return;
 
-        foreach (var dict in dictionaries)
-        {
+        foreach (Dictionary dict in dictionaries)
             dict.Precedence = listDictionaries.SelectedItems.IndexOf(dict) + 1;
-        }
 
-        var selectedDictionaries = listDictionaries.SelectedItems.Cast<Dictionary>().ToList();
+        List<Dictionary> selectedDictionaries = listDictionaries.SelectedItems.Cast<Dictionary>().ToList();
         ConfigStore.Instance.Config.SelectedDictionaries = selectedDictionaries.Select(x => x.Name).ToList();
         var results = new List<DictionaryLookupResult>();
         results.AddRange(DictionaryResults);
@@ -691,7 +682,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         string address = null;
         Dispatcher.Invoke(() => address = browser.Address);
         if (string.IsNullOrWhiteSpace(address)) return;
-        var dict = DictionaryStore.Instance.GetDictionaryByUrl(address);
+        Dictionary dict = DictionaryStore.Instance.GetDictionaryByUrl(address);
 
         if (dict != null)
         {
@@ -707,6 +698,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
             }
 
             if (!string.IsNullOrWhiteSpace(headword))
+            {
                 Dispatcher.Invoke(() =>
                 {
                     txtWord.Text = headword;
@@ -718,6 +710,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
                         txtWord.SelectAll();
                     }
                 });
+            }
         }
     }
 
@@ -766,38 +759,8 @@ public partial class MainWindow : Window, INotifyPropertyChanged
             autoOcrTimer.Start();
         }
         else
-        {
             startOcr();
-        }
     }
-
-    public class AdBlockRequestHandler : RequestHandler
-    {
-        protected override bool OnBeforeBrowse(IWebBrowser chromiumWebBrowser, IBrowser browser, IFrame frame, IRequest request, bool userGesture, bool isRedirect)
-        {
-            var block = AdHostStore.Instance.IsAdUrl(request.Url);
-            return block;
-        }
-
-        protected override IResourceRequestHandler GetResourceRequestHandler(IWebBrowser chromiumWebBrowser, IBrowser browser, IFrame frame, IRequest request, bool isNavigation, bool isDownload,
-            string requestInitiator, ref bool disableDefaultHandling)
-        {
-            var block = AdHostStore.Instance.IsAdUrl(request.Url);
-            if (block)
-                return new AdBlockResourceRequestHandler();
-            return null;
-        }
-    }
-
-    public class AdBlockResourceRequestHandler : ResourceRequestHandler
-    {
-        protected override CefReturnValue OnBeforeResourceLoad(IWebBrowser chromiumWebBrowser, IBrowser browser, IFrame frame, IRequest request, IRequestCallback callback)
-        {
-            return CefReturnValue.Cancel;
-        }
-    }
-
-    private bool canExit;
 
     private async void mainWindow_Closing(object sender, CancelEventArgs e)
     {
@@ -814,9 +777,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         }
 
         if (canExit)
-        {
             return;
-        }
 
         if (updateFinished.CurrentCount <= 0)
         {
@@ -829,8 +790,6 @@ public partial class MainWindow : Window, INotifyPropertyChanged
             Close();
         }
     }
-
-    private string lastWordUrl;
 
     private async void btnNewWordPanel_Checked(object sender, RoutedEventArgs e)
     {
@@ -865,7 +824,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
                 btnNewWordPanel.IsEnabled = false;
             });
 
-            var dict = DictionaryStore.Instance.GetDictionaryByUrl(browser.Address);
+            Dictionary dict = DictionaryStore.Instance.GetDictionaryByUrl(browser.Address);
 
             if (dict != null)
             {
@@ -881,7 +840,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
                 }
 
                 if (string.IsNullOrWhiteSpace(headword)) headword = txtWord.Text;
-                var desc = "";
+                string desc = "";
 
                 try
                 {
@@ -916,9 +875,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         if (wordListBrowser == null) wordListBrowser = new WordListBrowser(this);
 
         if (!Application.Current.Windows.OfType<WordListBrowser>().Contains(wordListBrowser))
-        {
             wordListBrowser = new WordListBrowser(this);
-        }
 
         wordListBrowser.Show();
         wordListBrowser.Activate();
@@ -926,24 +883,18 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
     private void txtNewWord_TextChanged(object sender, TextChangedEventArgs e)
     {
-        var valid = txtNewWord.Text.Length > 0 && SelectedWordList != null;
+        bool valid = txtNewWord.Text.Length > 0 && SelectedWordList != null;
         btnAddWord.IsEnabled = valid;
 
         if (valid)
         {
             if (SelectedWordList.WordList.Entries.Select(x => x.Word.Trim().ToLower()).Contains(txtNewWord.Text.Trim().ToLower()))
-            {
                 lblDuplicateWord.Show();
-            }
             else
-            {
                 lblDuplicateWord.Hide(false);
-            }
         }
         else
-        {
             lblDuplicateWord.Hide(false);
-        }
     }
 
     private void btnNewListSave_Click(object sender, RoutedEventArgs e)
@@ -956,8 +907,8 @@ public partial class MainWindow : Window, INotifyPropertyChanged
             return;
         }
 
-        var listName = txtNewListName.Text;
-        var path = Path.Combine(WordListStore.WordListFolderPath, $"{listName}.xml");
+        string listName = txtNewListName.Text;
+        string path = Path.Combine(WordListStore.WordListFolderPath, $"{listName}.xml");
         var wordlistFile = new WordListFile(path, new WordList
             { Name = listName, Created = DateTime.Now });
         WordListStore.WordListFiles.Add(wordlistFile);
@@ -987,24 +938,18 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
     private void listWordListSelector_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        var valid = txtNewWord.Text.Length > 0 && SelectedWordList != null;
+        bool valid = txtNewWord.Text.Length > 0 && SelectedWordList != null;
         btnAddWord.IsEnabled = valid;
 
         if (valid)
         {
             if (SelectedWordList.WordList.Entries.Select(x => x.Word.Trim().ToLower()).Contains(txtNewWord.Text.Trim().ToLower()))
-            {
                 lblDuplicateWord.Show();
-            }
             else
-            {
                 lblDuplicateWord.Hide(false);
-            }
         }
         else
-        {
             lblDuplicateWord.Hide(false);
-        }
 
         if (SelectedWordList != null)
             drawerHost.IsBottomDrawerOpen = false;
@@ -1023,13 +968,9 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         progressLoading.Visibility = Visibility.Visible;
 
         if (!string.IsNullOrWhiteSpace(word.Url))
-        {
             browser.Load(word.Url);
-        }
         else
-        {
             search(word.Word);
-        }
 
         unminimize();
         Activate();
@@ -1047,14 +988,38 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         if (stopSelectionUpdate) return;
 
         if (listSwitchDictionaries.SelectedItem != null)
-        {
             browser.Load(((DictionaryLookupResult)listSwitchDictionaries.SelectedItem).Url);
-        }
     }
 
     private void btnSwitchDictionaryPanel_Click(object sender, RoutedEventArgs e)
     {
         SwitchDictionaryExpanded = !SwitchDictionaryExpanded;
+    }
+
+    public class AdBlockRequestHandler : RequestHandler
+    {
+        protected override bool OnBeforeBrowse(IWebBrowser chromiumWebBrowser, IBrowser browser, IFrame frame, IRequest request, bool userGesture, bool isRedirect)
+        {
+            bool block = AdHostStore.Instance.IsAdUrl(request.Url);
+            return block;
+        }
+
+        protected override IResourceRequestHandler GetResourceRequestHandler(IWebBrowser chromiumWebBrowser, IBrowser browser, IFrame frame, IRequest request, bool isNavigation, bool isDownload,
+            string requestInitiator, ref bool disableDefaultHandling)
+        {
+            bool block = AdHostStore.Instance.IsAdUrl(request.Url);
+            if (block)
+                return new AdBlockResourceRequestHandler();
+            return null;
+        }
+    }
+
+    public class AdBlockResourceRequestHandler : ResourceRequestHandler
+    {
+        protected override CefReturnValue OnBeforeResourceLoad(IWebBrowser chromiumWebBrowser, IBrowser browser, IFrame frame, IRequest request, IRequestCallback callback)
+        {
+            return CefReturnValue.Cancel;
+        }
     }
 }
 

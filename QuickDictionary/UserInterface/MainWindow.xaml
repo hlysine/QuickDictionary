@@ -29,7 +29,7 @@
         <TranslateTransform
             Y="0"
             X="0" />
-    </Window.RenderTransform >
+    </Window.RenderTransform>
     <Grid
         Name="root"
         VerticalAlignment="Stretch">
@@ -148,14 +148,12 @@
                                             VerticalAlignment="Center"
                                             Style="{DynamicResource MaterialDesignBody2TextBlock}"
                                             Grid.Column="1"
-                                            Text="{Binding WordList.Name}">
-                                        </TextBlock>
+                                            Text="{Binding WordList.Name}" />
                                         <TextBlock
                                             Style="{DynamicResource MaterialDesignCaptionTextBlock}"
                                             Grid.Column="2"
                                             VerticalAlignment="Center"
-                                            Text="{Binding WordList.Entries.Count, StringFormat={}{0} entries}">
-                                        </TextBlock>
+                                            Text="{Binding WordList.Entries.Count, StringFormat={}{0} entries}" />
                                     </Grid>
                                 </DataTemplate>
                             </ListBox.ItemTemplate>
@@ -178,8 +176,7 @@
                                     Kind="Add" />
                                 <TextBlock
                                     Grid.Column="1"
-                                    Text="CREATE NEW LIST">
-                                </TextBlock>
+                                    Text="CREATE NEW LIST" />
                             </Grid>
                         </Button>
                     </Grid>
@@ -523,8 +520,7 @@
                                                 Kind="PlaylistStar" />
                                             <TextBlock
                                                 Grid.Column="1"
-                                                Text="{Binding SelectedWordList.WordList.Name}">
-                                            </TextBlock>
+                                                Text="{Binding SelectedWordList.WordList.Name}" />
                                             <materialDesign:PackIcon
                                                 Grid.Column="2"
                                                 Kind="ArrowDropDown" />
@@ -612,8 +608,7 @@
                         Grid.Column="1"
                         Margin="5 0 0 0"
                         Style="{StaticResource MaterialDesignCaptionTextBlock}"
-                        Text="{Binding UpdateProgress, StringFormat={}{0}%}">
-                    </TextBlock>
+                        Text="{Binding UpdateProgress, StringFormat={}{0}%}" />
                 </Grid>
             </StackPanel>
         </Grid>

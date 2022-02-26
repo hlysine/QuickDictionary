@@ -7,11 +7,9 @@ namespace QuickDictionary.Models.Dictionaries;
 
 public class DictionaryStore
 {
-    public readonly ObservableCollection<Dictionary> Dictionaries = new();
-
     private static DictionaryStore instance;
     
-    public static DictionaryStore Instance => instance ??= new DictionaryStore();
+    public readonly ObservableCollection<Dictionary> Dictionaries = new();
 
     private DictionaryStore()
     {
@@ -24,13 +22,13 @@ public class DictionaryStore
         Dictionaries.Add(new GoogleSearchDictionary());
     }
 
+    public static DictionaryStore Instance => instance ??= new DictionaryStore();
+
     [CanBeNull]
     public Dictionary GetDictionaryByUrl(string url)
     {
-        if (Uri.TryCreate(url, UriKind.RelativeOrAbsolute, out var uri))
-        {
+        if (Uri.TryCreate(url, UriKind.RelativeOrAbsolute, out Uri uri))
             return uri.IsAbsoluteUri ? Dictionaries.FirstOrDefault(x => x.ValidateUrl(url)) : null;
-        }
 
         return null;
     }

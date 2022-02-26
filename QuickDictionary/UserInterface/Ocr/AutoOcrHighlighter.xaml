@@ -23,7 +23,7 @@
             Padding="8"
             Background="Transparent">
             <ocr:AutoOcrTooltip
-                Margin="0"></ocr:AutoOcrTooltip>
+                Margin="0" />
         </ToolTip>
     </Window.ToolTip>
     <Window.Background>

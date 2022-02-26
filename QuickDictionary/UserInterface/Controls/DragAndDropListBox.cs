@@ -12,19 +12,6 @@ public class DragAndDropListBox<T> : ListBox
 {
     private Point dragStartPoint;
 
-    private TParent FindVisualParent<TParent>(DependencyObject child)
-        where TParent : DependencyObject
-    {
-        var parentObject = VisualTreeHelper.GetParent(child);
-        if (parentObject == null)
-            return null;
-
-        if (parentObject is TParent parent)
-            return parent;
-
-        return FindVisualParent<TParent>(parentObject);
-    }
-
     public DragAndDropListBox()
     {
         PreviewMouseMove += ListBox_PreviewMouseMove;
@@ -46,19 +33,31 @@ public class DragAndDropListBox<T> : ListBox
         ItemContainerStyle = style;
     }
 
+    private TParent FindVisualParent<TParent>(DependencyObject child)
+        where TParent : DependencyObject
+    {
+        DependencyObject parentObject = VisualTreeHelper.GetParent(child);
+        if (parentObject == null)
+            return null;
+
+        if (parentObject is TParent parent)
+            return parent;
+
+        return FindVisualParent<TParent>(parentObject);
+    }
+
     private void ListBox_PreviewMouseMove(object sender, MouseEventArgs e)
     {
-        var point = e.GetPosition(null);
-        var diff = dragStartPoint - point;
+        Point point = e.GetPosition(null);
+        Vector diff = dragStartPoint - point;
+
         if (e.LeftButton == MouseButtonState.Pressed &&
             (Math.Abs(diff.X) > SystemParameters.MinimumHorizontalDragDistance ||
              Math.Abs(diff.Y) > SystemParameters.MinimumVerticalDragDistance))
         {
-            var lbi = FindVisualParent<ListBoxItem>(((DependencyObject)e.OriginalSource));
+            var lbi = FindVisualParent<ListBoxItem>((DependencyObject)e.OriginalSource);
             if (lbi != null)
-            {
                 DragDrop.DoDragDrop(lbi, lbi.DataContext, DragDropEffects.Move);
-            }
         }
     }
 
@@ -73,8 +72,8 @@ public class DragAndDropListBox<T> : ListBox
         {
             if (e.Data.GetData(typeof(T)) is T source && item.DataContext is T target)
             {
-                var sourceIndex = Items.IndexOf(source);
-                var targetIndex = Items.IndexOf(target);
+                int sourceIndex = Items.IndexOf(source);
+                int targetIndex = Items.IndexOf(target);
 
                 move(source, sourceIndex, targetIndex);
             }
@@ -95,7 +94,8 @@ public class DragAndDropListBox<T> : ListBox
         {
             if (DataContext is IList<T> items)
             {
-                var removeIndex = sourceIndex + 1;
+                int removeIndex = sourceIndex + 1;
+
                 if (items.Count + 1 > removeIndex)
                 {
                     items.Insert(targetIndex, source);

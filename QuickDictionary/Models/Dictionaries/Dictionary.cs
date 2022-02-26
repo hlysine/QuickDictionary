@@ -1,41 +1,60 @@
-﻿using System.Threading.Tasks;
+﻿using System.Net;
+using System.Threading.Tasks;
 using CefSharp.Wpf;
+using JetBrains.Annotations;
 using MaterialDesignThemes.Wpf;
 
 namespace QuickDictionary.Models.Dictionaries;
 
 public abstract class Dictionary : NotifyPropertyChanged
 {
-    // Url to the dictionary with %s in place of the query
-    public abstract string Url { get; }
+    private int precedence;
 
-    // Function to check if a URL belongs to this dictionary
-    public abstract bool ValidateUrl(string url);
+    /// <summary>
+    /// Url to the dictionary with %s in place of the query
+    /// </summary>
+    protected abstract string Url { get; }
 
-    // Function to validate a query given the query url and query text
-    public abstract Task<bool> ValidateQueryAsync(string url, string word);
-
-    public abstract Task<string> GetWordAsync(ChromiumWebBrowser browser);
-
-    public abstract Task<string> GetDescriptionAsync(ChromiumWebBrowser browser);
-
-    // Pack icon in toolbar
+    /// <summary>
+    /// Pack icon shown in the toolbar
+    /// </summary>
     public abstract PackIconKind Icon { get; }
 
     public abstract string Name { get; }
 
-    public override string ToString()
-    {
-        return Name;
-    }
-
     public string PrecedenceString => precedence > 0 ? precedence.ToString() : "";
-
-    private int precedence;
 
     public int Precedence
     {
         get => precedence;
         set => SetAndNotify(ref precedence, value, new[] { nameof(PrecedenceString) });
+    }
+
+    public string GetUrl(string word)
+    {
+        return Url.Replace("%s", WebUtility.UrlEncode(word));
+    }
+
+    /// <summary>
+    /// Check if a given link belongs to this dictionary.
+    /// </summary>
+    public abstract bool ValidateUrl(string url);
+
+    /// <summary>
+    /// Query the provided word in the dictionary and return a link to the word entry if the word is found.
+    /// Return null otherwise.
+    /// </summary>
+    /// <param name="word">The word to look up.</param>
+    /// <returns>A task containing a link to the word entry, or null.</returns>
+    [ItemCanBeNull]
+    public abstract Task<string> ExecuteQueryAsync(string word);
+
+    public abstract Task<string> GetWordAsync(ChromiumWebBrowser browser);
+
+    public abstract Task<string> GetDescriptionAsync(ChromiumWebBrowser browser);
+
+    public override string ToString()
+    {
+        return Name;
     }
 }

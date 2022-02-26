@@ -1,5 +1,4 @@
-﻿using System;
-using System.CodeDom;
+﻿using System.CodeDom;
 using System.CodeDom.Compiler;
 using System.IO;
 using System.Net;
@@ -12,127 +11,30 @@ namespace QuickDictionary.Utils;
 
 public static class WebUtils
 {
-    public static async Task<string> GetFinalRedirectAsync(string url)
+    public static async Task<HttpWebResponse> GetResponseAfterRedirect(string url)
     {
-        if (string.IsNullOrWhiteSpace(url))
-            return url;
+        HttpWebRequest req = WebRequest.CreateHttp(url);
 
-        var maxRedirCount = 8;  // prevent infinite loops
-        var newUrl = url;
-        do
+        try
         {
-            HttpWebRequest req;
-            HttpWebResponse resp = null;
-            try
-            {
-                req = (HttpWebRequest)WebRequest.Create(url);
-                req.Method = "HEAD";
-                req.AllowAutoRedirect = false;
-                resp = (HttpWebResponse)await req.GetResponseAsync();
-                switch (resp.StatusCode)
-                {
-                    case HttpStatusCode.OK:
-                        return newUrl;
-                    case HttpStatusCode.Redirect:
-                    case HttpStatusCode.MovedPermanently:
-                    case HttpStatusCode.RedirectKeepVerb:
-                    case HttpStatusCode.RedirectMethod:
-                        newUrl = resp.Headers["Location"];
-                        if (newUrl == null)
-                            return url;
-
-                        if (newUrl.IndexOf("://", StringComparison.Ordinal) == -1)
-                        {
-                            // Doesn't have a URL Schema, meaning it's a relative or absolute URL
-                            var u = new Uri(new Uri(url), newUrl);
-                            newUrl = u.ToString();
-                        }
-                        break;
-                    default:
-                        return newUrl;
-                }
-                url = newUrl;
-            }
-            catch (WebException)
-            {
-                // Return the last known good URL
-                return newUrl;
-            }
-            catch (Exception)
-            {
-                return null;
-            }
-            finally
-            {
-                if (resp != null)
-                    resp.Close();
-            }
-        } while (maxRedirCount-- > 0);
-
-        return newUrl;
+            req.Method = "HEAD";
+            req.AllowAutoRedirect = true;
+            return (HttpWebResponse)await req.GetResponseAsync();
+        }
+        catch (WebException ex)
+        {
+            return ex.Response as HttpWebResponse ?? throw ex;
+        }
     }
 
-    public static async Task<HttpStatusCode> GetFinalStatusCodeAsync(string url)
+    public static async Task<string> GetUrlAfterRedirect(string url)
     {
-        if (string.IsNullOrWhiteSpace(url))
-            return HttpStatusCode.NotFound;
+        return (await GetResponseAfterRedirect(url)).ResponseUri.AbsoluteUri;
+    }
 
-        var maxRedirectCount = 8;  // prevent infinite loops
-        var statusCode = HttpStatusCode.NotFound;
-        do
-        {
-            HttpWebRequest req;
-            HttpWebResponse resp = null;
-            try
-            {
-                req = (HttpWebRequest)WebRequest.Create(url);
-                req.Method = "HEAD";
-                req.AllowAutoRedirect = false;
-                resp = (HttpWebResponse)await req.GetResponseAsync();
-                statusCode = resp.StatusCode;
-                string newUrl;
-
-                switch (resp.StatusCode)
-                {
-                    case HttpStatusCode.OK:
-                        return statusCode;
-                    case HttpStatusCode.Redirect:
-                    case HttpStatusCode.MovedPermanently:
-                    case HttpStatusCode.RedirectKeepVerb:
-                    case HttpStatusCode.RedirectMethod:
-                        newUrl = resp.Headers["Location"];
-                        if (newUrl == null)
-                            return statusCode;
-
-                        if (newUrl.IndexOf("://", StringComparison.Ordinal) == -1)
-                        {
-                            // Doesn't have a URL Schema, meaning it's a relative or absolute URL
-                            var u = new Uri(new Uri(url), newUrl);
-                            newUrl = u.ToString();
-                        }
-                        break;
-                    default:
-                        return statusCode;
-                }
-                url = newUrl;
-            }
-            catch (WebException)
-            {
-                // Return the last known good URL
-                return statusCode;
-            }
-            catch (Exception)
-            {
-                return statusCode;
-            }
-            finally
-            {
-                if (resp != null)
-                    resp.Close();
-            }
-        } while (maxRedirectCount-- > 0);
-
-        return statusCode;
+    public static async Task<HttpStatusCode> GetStatusCodeAfterRedirect(string url)
+    {
+        return (await GetResponseAfterRedirect(url)).StatusCode;
     }
 
     public static string ToJSLiteral(this string input)
@@ -147,20 +49,20 @@ public static class WebUtils
     {
         var sb = new StringBuilder();
         sb.Append(@"(function() { return ");
-        for (var i = 0; i < xpath.Length; i++)
+
+        for (int i = 0; i < xpath.Length; i++)
         {
             sb.Append(@"document.evaluate(" + xpath[i].ToJSLiteral() + @", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue.innerText");
+
             if (i != xpath.Length - 1)
-            {
                 sb.Append(@" + '\r\n' + ");
-            }
         }
+
         sb.Append(@";})();");
-        var result = await browser.EvaluateScriptAsync(sb.ToString());
+        JavascriptResponse result = await browser.EvaluateScriptAsync(sb.ToString());
+
         if (result.Success)
-        {
             return result.Result as string;
-        }
 
         return null;
     }

@@ -14,6 +14,12 @@ public partial class WordListItem : UserControl
         DependencyProperty.Register("EditLists", typeof(bool), typeof(WordListItem), new
             PropertyMetadata(false, editListsChanged));
 
+    public WordListItem()
+    {
+        InitializeComponent();
+        ControlUtils.HideBoundingBox(root);
+    }
+
     public bool EditLists
     {
         get => (bool)GetValue(EDIT_LISTS_PROPERTY);
@@ -31,13 +37,8 @@ public partial class WordListItem : UserControl
     {
     }
 
-    public WordListItem()
-    {
-        InitializeComponent();
-        ControlUtils.HideBoundingBox(root);
-    }
-
     public event EventHandler DeleteList;
+    
     public event EventHandler RenameList;
 
     private void btnDeleteList_Click(object sender, RoutedEventArgs e)

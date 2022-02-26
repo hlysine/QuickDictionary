@@ -11,8 +11,19 @@ namespace QuickDictionary.UserInterface.Ocr;
 /// </summary>
 public partial class AutoOcrHighlighter : Window, INotifyPropertyChanged
 {
+    private const int padding = 3;
+
+    private string description;
+
+    private string dictionaryName;
 
     private string word;
+
+    public AutoOcrHighlighter()
+    {
+        InitializeComponent();
+    }
+
     public string Word
     {
         get => word;
@@ -23,7 +34,6 @@ public partial class AutoOcrHighlighter : Window, INotifyPropertyChanged
         }
     }
 
-    private string dictionaryName;
     public string DictionaryName
     {
         get => dictionaryName;
@@ -33,10 +43,6 @@ public partial class AutoOcrHighlighter : Window, INotifyPropertyChanged
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(DictionaryName)));
         }
     }
-
-    public event PropertyChangedEventHandler PropertyChanged;
-
-    private string description;
 
     public string Description
     {
@@ -48,9 +54,9 @@ public partial class AutoOcrHighlighter : Window, INotifyPropertyChanged
         }
     }
 
-    private const int padding = 3;
-
     public OcrEntry OcrEntry { get; set; }
+
+    public event PropertyChangedEventHandler PropertyChanged;
 
     public void SetWord(OcrEntry entry)
     {
@@ -59,19 +65,14 @@ public partial class AutoOcrHighlighter : Window, INotifyPropertyChanged
         Top = entry.Rect.Top - padding;
         Width = entry.Rect.Width + padding * 2;
         Height = entry.Rect.Height + padding * 2 + 3;
-        this.word = entry.Word;
-    }
-
-    public AutoOcrHighlighter()
-    {
-        InitializeComponent();
+        word = entry.Word;
     }
 
     private void Window_Loaded(object sender, RoutedEventArgs e)
     {
         var wndHelper = new WindowInteropHelper(this);
 
-        var exStyle = (int)NativeMethods.GetWindowLong(wndHelper.Handle, (int)NativeMethods.GetWindowLongFields.GwlExStyle);
+        int exStyle = (int)NativeMethods.GetWindowLong(wndHelper.Handle, (int)NativeMethods.GetWindowLongFields.GwlExStyle);
 
         exStyle |= (int)NativeMethods.ExtendedWindowStyles.WsExToolWindow;
         NativeMethods.SetWindowLong(wndHelper.Handle, (int)NativeMethods.GetWindowLongFields.GwlExStyle, (IntPtr)exStyle);

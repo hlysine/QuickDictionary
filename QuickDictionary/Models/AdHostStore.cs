@@ -9,25 +9,23 @@ namespace QuickDictionary.Models;
 
 public class AdHostStore
 {
-    public string[] AdHosts { get; private set; } = Array.Empty<string>();
-
     private static AdHostStore instance;
+
+    public string[] AdHosts { get; private set; } = Array.Empty<string>();
 
     public static AdHostStore Instance => instance ??= new AdHostStore();
 
     public async Task DownloadHostListAsync()
     {
         var client = new WebClient();
-        var stream = await client.OpenReadTaskAsync("https://raw.githubusercontent.com/anudeepND/blacklist/master/adservers.txt");
+        Stream stream = await client.OpenReadTaskAsync("https://raw.githubusercontent.com/anudeepND/blacklist/master/adservers.txt");
         var reader = new StreamReader(stream);
-        var content = await reader.ReadToEndAsync();
-        var matches = Regex.Matches(content, @"0\.0\.0\.0 (.+)");
-        var hosts = new string[matches.Count];
+        string content = await reader.ReadToEndAsync();
+        MatchCollection matches = Regex.Matches(content, @"0\.0\.0\.0 (.+)");
+        string[] hosts = new string[matches.Count];
 
         for (int i = 0; i < matches.Count; i++)
-        {
             hosts[i] = matches[i].Groups[1].Value;
-        }
 
         AdHosts = hosts.OrderBy(x => x).ToArray();
     }

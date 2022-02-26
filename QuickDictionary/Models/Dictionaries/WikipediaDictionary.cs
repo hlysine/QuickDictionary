@@ -10,20 +10,31 @@ namespace QuickDictionary.Models.Dictionaries;
 
 public class WikipediaDictionary : Dictionary
 {
-    public override string Url => "https://www.wikipedia.org/wiki/%s";
+    protected override string Url => "https://www.wikipedia.org/wiki/%s";
+
+    public override PackIconKind Icon => PackIconKind.Wikipedia;
+
+    public override string Name => "Wikipedia";
 
     public override bool ValidateUrl(string url)
-        => new Uri(url).Host.Trim().ToLower().Contains("wikipedia.org");
+    {
+        return new Uri(url).Host.Trim().ToLower().Contains("wikipedia.org");
+    }
 
-    public override async Task<bool> ValidateQueryAsync(string url, string word)
-        => await WebUtils.GetFinalStatusCodeAsync(url) == HttpStatusCode.OK;
+    public override async Task<string> ExecuteQueryAsync(string word)
+    {
+        HttpWebResponse response = await WebUtils.GetResponseAfterRedirect(GetUrl(word));
+
+        return response.StatusCode == HttpStatusCode.OK ? response.ResponseUri.AbsoluteUri : null;
+    }
 
     public override async Task<string> GetWordAsync(ChromiumWebBrowser browser)
     {
-        var headword = await browser.GetInnerTextByXPath(@"//div[@class='page-heading']");
+        string headword = await browser.GetInnerTextByXPath(@"//div[@class='page-heading']");
         if (!string.IsNullOrWhiteSpace(headword))
             return headword;
-        var match = Regex.Match(browser.Address, @"wikipedia\.org\/w\/index\.php\?title=([^&]+)");
+        Match match = Regex.Match(browser.Address, @"wikipedia\.org\/w\/index\.php\?title=([^&]+)");
+
         if (match.Success)
         {
             headword = WebUtility.UrlDecode(match.Groups[1].Value);
@@ -31,6 +42,7 @@ public class WikipediaDictionary : Dictionary
         }
 
         match = Regex.Match(browser.Address, @"wikipedia\.org\/wiki\/([^?]+)");
+
         if (match.Success)
         {
             headword = WebUtility.UrlDecode(match.Groups[1].Value);
@@ -42,13 +54,9 @@ public class WikipediaDictionary : Dictionary
 
     public override async Task<string> GetDescriptionAsync(ChromiumWebBrowser browser)
     {
-        var res = await browser.GetInnerTextByXPath(@"(//div[@id='bodyContent']//p[not(@class)])[1]");
+        string res = await browser.GetInnerTextByXPath(@"(//div[@id='bodyContent']//p[not(@class)])[1]");
         if (res == null)
             return null;
         return Regex.Replace(res, @"\[\d+\]", "");
     }
-
-    public override PackIconKind Icon => PackIconKind.Wikipedia;
-
-    public override string Name => "Wikipedia";
 }

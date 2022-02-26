@@ -74,8 +74,7 @@
                                     HorizontalAlignment="Left"
                                     TextWrapping="Wrap"
                                     Style="{StaticResource MaterialDesignHeadline5TextBlock}"
-                                    Text="{Binding Word}">
-                                </TextBlock>
+                                    Text="{Binding Word}" />
                             </Button>
                             <TextBlock
                                 Margin="16 0 16 16"
@@ -117,13 +116,11 @@
                             VerticalAlignment="Top"
                             TextWrapping="Wrap"
                             Style="{StaticResource MaterialDesignBody2TextBlock}"
-                            Text="{Binding Description}">
-                        </TextBlock>
+                            Text="{Binding Description}" />
                     </ScrollViewer>
                 </Grid>
             </materialDesign:Card>
         </Grid>
-
 
 
         <Grid
@@ -171,16 +168,14 @@
                                 VerticalAlignment="Center"
                                 TextWrapping="Wrap"
                                 Style="{StaticResource MaterialDesignHeadline5TextBlock}"
-                                Text="{Binding Word}">
-                            </TextBlock>
+                                Text="{Binding Word}" />
                             <TextBlock
                                 Grid.Row="1"
                                 VerticalAlignment="Center"
                                 HorizontalAlignment="Center"
                                 Style="{StaticResource MaterialDesignCaptionTextBlock}"
                                 Foreground="{DynamicResource MaterialDesignBodyLight}"
-                                Text="{Binding CreatedString}">
-                            </TextBlock>
+                                Text="{Binding CreatedString}" />
                         </Grid>
                     </Button>
                 </materialDesign:Card>
@@ -223,8 +218,7 @@
                                 Style="{StaticResource MaterialDesignCaptionTextBlock}"
                                 Foreground="{DynamicResource MaterialDesignBodyLight}"
                                 Text="{Binding DictionaryName}"
-                                TextWrapping="Wrap">
-                            </TextBlock>
+                                TextWrapping="Wrap" />
                             <Button
                                 Grid.Column="1"
                                 VerticalAlignment="Top"
@@ -246,8 +240,7 @@
                                 VerticalAlignment="Center"
                                 TextWrapping="Wrap"
                                 Style="{StaticResource MaterialDesignBody1TextBlock}"
-                                Text="{Binding Description}">
-                            </TextBlock>
+                                Text="{Binding Description}" />
                         </ScrollViewer>
                     </Grid>
                 </materialDesign:Card>
@@ -313,8 +306,7 @@
                                 UpdateSourceTrigger="PropertyChanged"
                                 ValidatesOnNotifyDataErrors="True"
                                 ValidatesOnDataErrors="True"
-                                NotifyOnValidationError="True">
-                            </Binding>
+                                NotifyOnValidationError="True" />
                         </TextBox.Text>
                     </TextBox>
                     <TextBox
@@ -340,8 +332,7 @@
                                 UpdateSourceTrigger="PropertyChanged"
                                 ValidatesOnNotifyDataErrors="True"
                                 ValidatesOnDataErrors="True"
-                                NotifyOnValidationError="True">
-                            </Binding>
+                                NotifyOnValidationError="True" />
                         </TextBox.Text>
                     </TextBox>
                     <StackPanel

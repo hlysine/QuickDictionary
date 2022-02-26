@@ -29,8 +29,7 @@
                 Margin="0 0 0 4"
                 TextWrapping="Wrap"
                 Style="{DynamicResource MaterialDesignBody1TextBlock}"
-                Text="{Binding WordList.Name}">
-            </TextBlock>
+                Text="{Binding WordList.Name}" />
             <TextBlock
                 TextWrapping="Wrap">
                 <TextBlock.Text>

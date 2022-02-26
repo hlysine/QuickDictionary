@@ -19,7 +19,8 @@ public static class WordListStore
             {
                 ConfigStore.Instance.Config.WordListsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "QuickDictionary\\Word Lists");
                 ConfigStore.Instance.SaveConfig();
-            }    
+            }
+
             return ConfigStore.Instance.Config.WordListsPath;
         }
     }
@@ -28,10 +29,9 @@ public static class WordListStore
 
     public static void CommitDeletions()
     {
-        foreach (var path in DeletedPaths)
-        {
-            if (File.Exists(path)) File.Delete(path);
-        }
+        foreach (string path in DeletedPaths)
+            if (File.Exists(path))
+                File.Delete(path);
         DeletedPaths.Clear();
     }
 
@@ -45,17 +45,13 @@ public static class WordListStore
     public static async Task LoadAllWordLists()
     {
         if (!Directory.Exists(WordListFolderPath))
-        {
             Directory.CreateDirectory(WordListFolderPath);
-        }
-        var lists = Directory.GetFiles(WordListFolderPath, "*.xml", SearchOption.TopDirectoryOnly);
+        string[] lists = Directory.GetFiles(WordListFolderPath, "*.xml", SearchOption.TopDirectoryOnly);
         WordListFiles.Clear();
         await Task.Run(() =>
         {
-            foreach (var path in lists)
-            {
+            foreach (string path in lists)
                 WordListFiles.Add(new WordListFile(path, LoadWordList(path)));
-            }
         });
     }
 

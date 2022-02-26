@@ -42,8 +42,7 @@
                     HorizontalAlignment="Left"
                     TextWrapping="Wrap"
                     Style="{StaticResource MaterialDesignHeadline5TextBlock}"
-                    Text="{Binding Word}">
-                </TextBlock>
+                    Text="{Binding Word}" />
             </Button>
             <TextBlock
                 Grid.Row="1"
@@ -53,8 +52,7 @@
                 Style="{StaticResource MaterialDesignCaptionTextBlock}"
                 Foreground="{DynamicResource MaterialDesignBodyLight}"
                 TextWrapping="Wrap"
-                Text="{Binding DictionaryName}">
-            </TextBlock>
+                Text="{Binding DictionaryName}" />
             <TextBlock
                 Grid.Row="2"
                 HorizontalAlignment="Left"
@@ -62,8 +60,7 @@
                 TextWrapping="Wrap"
                 Style="{StaticResource MaterialDesignBody1TextBlock}"
                 Visibility="{Binding Description, Converter={StaticResource NullToVisibilityConverter}, FallbackValue=Collapsed, TargetNullValue=Collapsed}"
-                Text="{Binding Description}">
-            </TextBlock>
+                Text="{Binding Description}" />
             <ProgressBar
                 Grid.Row="2"
                 HorizontalAlignment="Left"

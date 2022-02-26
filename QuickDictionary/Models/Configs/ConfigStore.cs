@@ -10,7 +10,17 @@ public class ConfigStore : NotifyPropertyChanged
 {
     public static readonly string PERSISTENT_PATH = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "QuickDictionary");
 
+    private static ConfigStore instance;
+
     private Config config = new();
+
+    private ConfigStore()
+    {
+        if (!Directory.Exists(PERSISTENT_PATH))
+            Directory.CreateDirectory(PERSISTENT_PATH);
+
+        LoadConfig();
+    }
 
     public Config Config
     {
@@ -18,19 +28,7 @@ public class ConfigStore : NotifyPropertyChanged
         private set => SetAndNotify(ref config, value);
     }
 
-    private static ConfigStore instance;
-
     public static ConfigStore Instance => instance ??= new ConfigStore();
-
-    private ConfigStore()
-    {
-        if (!Directory.Exists(PERSISTENT_PATH))
-        {
-            Directory.CreateDirectory(PERSISTENT_PATH);
-        }
-
-        LoadConfig();
-    }
 
     public void SaveConfig()
     {
@@ -52,7 +50,8 @@ public class ConfigStore : NotifyPropertyChanged
     {
         try
         {
-            var path = Path.Combine(PERSISTENT_PATH, "config.xml");
+            string path = Path.Combine(PERSISTENT_PATH, "config.xml");
+
             if (File.Exists(path))
             {
                 using var fs = new FileStream(path, FileMode.Open);
@@ -60,9 +59,7 @@ public class ConfigStore : NotifyPropertyChanged
                 Config = (Config)serializer.Deserialize(fs);
             }
             else
-            {
                 overrideConfigWithDefault();
-            }
         }
         catch (Exception)
         {

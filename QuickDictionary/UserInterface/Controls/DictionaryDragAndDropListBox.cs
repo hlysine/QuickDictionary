@@ -2,4 +2,6 @@
 
 namespace QuickDictionary.UserInterface.Controls;
 
-public class DictionaryDragAndDropListBox : DragAndDropListBox<Dictionary> { }
+public class DictionaryDragAndDropListBox : DragAndDropListBox<Dictionary>
+{
+}

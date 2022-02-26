@@ -104,7 +104,7 @@
                                 HorizontalAlignment="Left"
                                 VerticalAlignment="Center"
                                 Style="{DynamicResource MaterialDesignHeadline6TextBlock}">
-                            Word Lists
+                                Word Lists
                             </TextBlock>
                             <ToggleButton
                                 Grid.Column="1"
@@ -151,8 +151,7 @@
                             Grid.Row="2"
                             HorizontalAlignment="Stretch"
                             x:Name="snackbar"
-                            MessageQueue="{materialDesign:MessageQueue}">
-                        </materialDesign:Snackbar>
+                            MessageQueue="{materialDesign:MessageQueue}" />
                     </Grid>
                 </materialDesign:DrawerHost.LeftDrawerContent>
                 <Grid
@@ -184,8 +183,7 @@
                                 <TextBlock
                                     Margin="0 0 0 4"
                                     Style="{DynamicResource MaterialDesignBody1TextBlock}"
-                                    Text="{Binding WordList.Name}">
-                                </TextBlock>
+                                    Text="{Binding WordList.Name}" />
                                 <TextBlock>
                                     <TextBlock.Text>
                                         <MultiBinding
@@ -253,7 +251,7 @@
                                     FlashcardMode="{Binding DataContext.WordList.FlashcardMode, RelativeSource={RelativeSource FindAncestor, AncestorType=ItemsControl}}"
                                     WordEdited="WordCard_WordEdited"
                                     DeleteWord="WordCard_DeleteWord"
-                                    NavigateWord="WordCard_NavigateWord"/>
+                                    NavigateWord="WordCard_NavigateWord" />
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
 
@@ -287,8 +285,7 @@
                     <materialDesign:Snackbar
                         Grid.Row="1"
                         x:Name="snackbarMain"
-                        MessageQueue="{materialDesign:MessageQueue}">
-                    </materialDesign:Snackbar>
+                        MessageQueue="{materialDesign:MessageQueue}" />
                 </Grid>
 
             </materialDesign:DrawerHost>

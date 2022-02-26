@@ -24,9 +24,10 @@ public class ScrollParentWhenAtMax : Behavior<FrameworkElement>
     private void previewMouseWheel(object sender, MouseWheelEventArgs e)
     {
         var scrollViewer = getVisualChild<ScrollViewer>(AssociatedObject);
-        var scrollPos = scrollViewer.ContentVerticalOffset;
-        if ((Math.Abs(scrollPos - scrollViewer.ScrollableHeight) < 1e-5 && e.Delta < 0)
-            || (scrollPos == 0 && e.Delta > 0))
+        double scrollPos = scrollViewer.ContentVerticalOffset;
+
+        if (Math.Abs(scrollPos - scrollViewer.ScrollableHeight) < 1e-5 && e.Delta < 0
+            || scrollPos == 0 && e.Delta > 0)
         {
             e.Handled = true;
             var e2 = new MouseWheelEventArgs(e.MouseDevice, e.Timestamp, e.Delta);
@@ -39,20 +40,19 @@ public class ScrollParentWhenAtMax : Behavior<FrameworkElement>
     {
         var child = default(T);
 
-        var numVisuals = VisualTreeHelper.GetChildrenCount(parent);
-        for (var i = 0; i < numVisuals; i++)
+        int numVisuals = VisualTreeHelper.GetChildrenCount(parent);
+
+        for (int i = 0; i < numVisuals; i++)
         {
             var v = (Visual)VisualTreeHelper.GetChild(parent, i);
             child = v as T;
             if (child == null)
-            {
                 child = getVisualChild<T>(v);
-            }
+
             if (child != null)
-            {
                 break;
-            }
         }
+
         return child;
     }
 }
