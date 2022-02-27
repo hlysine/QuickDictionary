@@ -29,12 +29,14 @@ public static class WebUtils
 
     public static async Task<string> GetUrlAfterRedirect(string url)
     {
-        return (await GetResponseAfterRedirect(url)).ResponseUri.AbsoluteUri;
+        using HttpWebResponse resp = await GetResponseAfterRedirect(url);
+        return resp.ResponseUri.AbsoluteUri;
     }
 
     public static async Task<HttpStatusCode> GetStatusCodeAfterRedirect(string url)
     {
-        return (await GetResponseAfterRedirect(url)).StatusCode;
+        using HttpWebResponse resp = await GetResponseAfterRedirect(url);
+        return resp.StatusCode;
     }
 
     public static string ToJSLiteral(this string input)

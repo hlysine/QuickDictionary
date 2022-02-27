@@ -23,7 +23,7 @@ public class WikipediaDictionary : Dictionary
 
     public override async Task<string> ExecuteQueryAsync(string word)
     {
-        HttpWebResponse response = await WebUtils.GetResponseAfterRedirect(GetUrl(word));
+        using HttpWebResponse response = await WebUtils.GetResponseAfterRedirect(GetUrl(word));
 
         return response.StatusCode == HttpStatusCode.OK ? response.ResponseUri.AbsoluteUri : null;
     }
