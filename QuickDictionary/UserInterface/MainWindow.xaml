@@ -540,6 +540,7 @@
                                         Style="{StaticResource MaterialDesignOutlinedTextBox}"
                                         AcceptsReturn="True"
                                         TextWrapping="Wrap"
+                                        FontFamily="JetBrains Mono, Consolas"
                                         VerticalAlignment="Stretch"
                                         VerticalScrollBarVisibility="Auto"
                                         TextAlignment="Left"

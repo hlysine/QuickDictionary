@@ -9,6 +9,7 @@
     xmlns:controls="clr-namespace:QuickDictionary.UserInterface.Controls"
     xmlns:validation="clr-namespace:QuickDictionary.UserInterface.Validation"
     xmlns:wordLists="clr-namespace:QuickDictionary.Models.WordLists"
+    xmlns:mdXaml="clr-namespace:MdXaml;assembly=MdXaml"
     TextElement.Foreground="{DynamicResource MaterialDesignBody}"
     TextElement.FontWeight="Regular"
     TextElement.FontSize="13"
@@ -104,20 +105,13 @@
                                 Kind="Edit" />
                         </Button>
                     </Grid>
-                    <ScrollViewer
+                    <mdXaml:MarkdownScrollViewer
                         Grid.Row="1"
                         HorizontalAlignment="Stretch"
                         VerticalAlignment="Stretch"
-                        HorizontalScrollBarVisibility="Disabled"
                         VerticalScrollBarVisibility="Auto"
-                        MaxHeight="350">
-                        <TextBlock
-                            HorizontalAlignment="Left"
-                            VerticalAlignment="Top"
-                            TextWrapping="Wrap"
-                            Style="{StaticResource MaterialDesignBody2TextBlock}"
-                            Text="{Binding Description}" />
-                    </ScrollViewer>
+                        MaxHeight="350"
+                        Markdown="{Binding Description}"/>
                 </Grid>
             </materialDesign:Card>
         </Grid>
@@ -228,20 +222,13 @@
                                     Kind="ArrowBack" />
                             </Button>
                         </Grid>
-                        <ScrollViewer
+                        <mdXaml:MarkdownScrollViewer
                             Grid.Row="1"
                             HorizontalAlignment="Stretch"
                             VerticalAlignment="Stretch"
-                            HorizontalScrollBarVisibility="Disabled"
                             VerticalScrollBarVisibility="Auto"
-                            MaxHeight="350">
-                            <TextBlock
-                                HorizontalAlignment="Left"
-                                VerticalAlignment="Center"
-                                TextWrapping="Wrap"
-                                Style="{StaticResource MaterialDesignBody1TextBlock}"
-                                Text="{Binding Description}" />
-                        </ScrollViewer>
+                            MaxHeight="350"
+                            Markdown="{Binding Description}"/>
                     </Grid>
                 </materialDesign:Card>
             </Grid>
@@ -319,6 +306,7 @@
                         VerticalAlignment="Stretch"
                         VerticalScrollBarVisibility="Auto"
                         MaxHeight="350"
+                        FontFamily="JetBrains Mono, Consolas"
                         TextAlignment="Left"
                         materialDesign:HintAssist.Hint="Description"
                         ToolTip="Description">

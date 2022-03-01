@@ -1,10 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-    <Import Project="..\packages\CefSharp.Common.98.1.210\build\CefSharp.Common.props" Condition="Exists('..\packages\CefSharp.Common.98.1.210\build\CefSharp.Common.props')"/>
-    <Import Project="..\packages\cef.redist.x86.98.1.21\build\cef.redist.x86.props" Condition="Exists('..\packages\cef.redist.x86.98.1.21\build\cef.redist.x86.props')"/>
-    <Import Project="..\packages\cef.redist.x64.98.1.21\build\cef.redist.x64.props" Condition="Exists('..\packages\cef.redist.x64.98.1.21\build\cef.redist.x64.props')"/>
-    <Import Project="..\packages\squirrel.windows.2.0.1\build\squirrel.windows.props" Condition="Exists('..\packages\squirrel.windows.2.0.1\build\squirrel.windows.props')"/>
-    <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')"/>
+    <Import Project="..\packages\CefSharp.Common.98.1.210\build\CefSharp.Common.props" Condition="Exists('..\packages\CefSharp.Common.98.1.210\build\CefSharp.Common.props')" />
+    <Import Project="..\packages\cef.redist.x86.98.1.21\build\cef.redist.x86.props" Condition="Exists('..\packages\cef.redist.x86.98.1.21\build\cef.redist.x86.props')" />
+    <Import Project="..\packages\cef.redist.x64.98.1.21\build\cef.redist.x64.props" Condition="Exists('..\packages\cef.redist.x64.98.1.21\build\cef.redist.x64.props')" />
+    <Import Project="..\packages\squirrel.windows.2.0.1\build\squirrel.windows.props" Condition="Exists('..\packages\squirrel.windows.2.0.1\build\squirrel.windows.props')" />
+    <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
     <PropertyGroup>
         <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
         <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -21,7 +21,7 @@
         <NuGetPackageImportStamp>
         </NuGetPackageImportStamp>
         <IsWebBootstrapper>false</IsWebBootstrapper>
-        <TargetFrameworkProfile/>
+        <TargetFrameworkProfile />
         <PublishUrl>publish\</PublishUrl>
         <Install>true</Install>
         <InstallFrom>Disk</InstallFrom>
@@ -126,6 +126,10 @@
             <HintPath>..\packages\HtmlAgilityPack.1.11.42\lib\Net45\HtmlAgilityPack.dll</HintPath>
             <Private>True</Private>
         </Reference>
+        <Reference Include="ICSharpCode.AvalonEdit, Version=6.0.0.0, Culture=neutral, PublicKeyToken=9cc39be672370310">
+          <HintPath>..\packages\AvalonEdit.6.0.0\lib\net45\ICSharpCode.AvalonEdit.dll</HintPath>
+          <Private>True</Private>
+        </Reference>
         <Reference Include="JetBrains.Annotations, Version=4242.42.42.42, Culture=neutral, PublicKeyToken=1010a0d8d6380325">
             <HintPath>..\packages\JetBrains.Annotations.2022.1.0-eap3\lib\net20\JetBrains.Annotations.dll</HintPath>
             <Private>True</Private>
@@ -138,7 +142,11 @@
             <HintPath>..\packages\MaterialDesignThemes.4.4.0-ci94\lib\net452\MaterialDesignThemes.Wpf.dll</HintPath>
             <Private>True</Private>
         </Reference>
-        <Reference Include="Microsoft.Build.Utilities.v4.0"/>
+        <Reference Include="MdXaml, Version=1.13.0.0, Culture=neutral, PublicKeyToken=null">
+          <HintPath>..\packages\MdXaml.1.13.0\lib\net45\MdXaml.dll</HintPath>
+          <Private>True</Private>
+        </Reference>
+        <Reference Include="Microsoft.Build.Utilities.v4.0" />
         <Reference Include="Mono.Cecil, Version=0.11.4.0, Culture=neutral, PublicKeyToken=50cebf1cceb9d05e">
             <HintPath>..\packages\Mono.Cecil.0.11.4\lib\net40\Mono.Cecil.dll</HintPath>
             <Private>True</Private>
@@ -167,72 +175,72 @@
         <Reference Include="Squirrel, Version=2.0.0.0, Culture=neutral, processorArchitecture=MSIL">
             <HintPath>..\packages\squirrel.windows.2.0.1\lib\Net45\Squirrel.dll</HintPath>
         </Reference>
-        <Reference Include="System"/>
-        <Reference Include="System.ComponentModel.Composition"/>
-        <Reference Include="System.ComponentModel.Composition.Registration"/>
-        <Reference Include="System.ComponentModel.DataAnnotations"/>
-        <Reference Include="System.Data"/>
-        <Reference Include="System.Drawing"/>
-        <Reference Include="System.IO.Compression"/>
+        <Reference Include="System" />
+        <Reference Include="System.ComponentModel.Composition" />
+        <Reference Include="System.ComponentModel.Composition.Registration" />
+        <Reference Include="System.ComponentModel.DataAnnotations" />
+        <Reference Include="System.Data" />
+        <Reference Include="System.Drawing" />
+        <Reference Include="System.IO.Compression" />
         <Reference Include="System.ValueTuple, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
             <HintPath>..\packages\System.ValueTuple.4.5.0\lib\net47\System.ValueTuple.dll</HintPath>
         </Reference>
-        <Reference Include="System.Windows.Forms"/>
+        <Reference Include="System.Windows.Forms" />
         <Reference Include="System.Windows.Interactivity, Version=4.5.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
             <HintPath>..\packages\Expression.Blend.Sdk.1.0.2\lib\net45\System.Windows.Interactivity.dll</HintPath>
         </Reference>
-        <Reference Include="System.Xml"/>
-        <Reference Include="Microsoft.CSharp"/>
-        <Reference Include="System.Core"/>
-        <Reference Include="System.Xml.Linq"/>
-        <Reference Include="System.Data.DataSetExtensions"/>
-        <Reference Include="System.Net.Http"/>
+        <Reference Include="System.Xml" />
+        <Reference Include="Microsoft.CSharp" />
+        <Reference Include="System.Core" />
+        <Reference Include="System.Xml.Linq" />
+        <Reference Include="System.Data.DataSetExtensions" />
+        <Reference Include="System.Net.Http" />
         <Reference Include="System.Xaml">
             <RequiredTargetFramework>4.0</RequiredTargetFramework>
         </Reference>
         <Reference Include="Tesseract, Version=4.1.1.0, Culture=neutral, processorArchitecture=MSIL">
             <HintPath>..\packages\Tesseract.4.1.1\lib\net45\Tesseract.dll</HintPath>
         </Reference>
-        <Reference Include="WindowsBase"/>
-        <Reference Include="PresentationCore"/>
-        <Reference Include="PresentationFramework"/>
+        <Reference Include="WindowsBase" />
+        <Reference Include="PresentationCore" />
+        <Reference Include="PresentationFramework" />
     </ItemGroup>
     <ItemGroup>
         <ApplicationDefinition Include="App.xaml">
             <Generator>MSBuild:Compile</Generator>
             <SubType>Designer</SubType>
         </ApplicationDefinition>
-        <Compile Include="Models\AdHostStore.cs"/>
-        <Compile Include="Models\Configs\Config.cs"/>
-        <Compile Include="Models\Configs\ConfigStore.cs"/>
-        <Compile Include="Models\Dictionaries\CambridgeEnglishChineseDictionary.cs"/>
-        <Compile Include="Models\Dictionaries\Dictionary.cs"/>
-        <Compile Include="Models\Dictionaries\DictionaryDotCom.cs"/>
-        <Compile Include="Models\Dictionaries\DictionaryLookupResult.cs"/>
-        <Compile Include="Models\Dictionaries\DictionaryStore.cs"/>
-        <Compile Include="Models\Dictionaries\GoogleSearchDictionary.cs"/>
-        <Compile Include="Models\Dictionaries\GoogleTranslateDictionary.cs"/>
-        <Compile Include="Models\Dictionaries\MerriamWebsterMedicalDictionary.cs"/>
-        <Compile Include="Models\Dictionaries\OxfordAdvancedLearnersDictionary.cs"/>
-        <Compile Include="Models\Dictionaries\WikipediaDictionary.cs"/>
-        <Compile Include="Models\NotifyPropertyChanged.cs"/>
-        <Compile Include="Models\WordLists\WordListFile.cs"/>
-        <Compile Include="Models\WordLists\WordEntry.cs"/>
-        <Compile Include="Models\WordLists\WordList.cs"/>
-        <Compile Include="Models\WordLists\WordListStore.cs"/>
-        <Compile Include="Native\ClipboardMonitor.cs"/>
-        <Compile Include="Native\KeyboardHook.cs"/>
-        <Compile Include="Native\NativeMethods.cs"/>
-        <Compile Include="Native\ScreenCapture.cs"/>
-        <Compile Include="UserInterface\Controls\ControlUtils.cs"/>
-        <Compile Include="UserInterface\Controls\DictionaryDragAndDropListBox.cs"/>
-        <Compile Include="UserInterface\Controls\DragAndDropListBox.cs"/>
-        <Compile Include="UserInterface\Controls\ScrollParentWhenAtMax.cs"/>
-        <Compile Include="UserInterface\Converters\BoolInverseConverter.cs"/>
-        <Compile Include="UserInterface\Converters\BoolToHVisibilityConverter.cs"/>
-        <Compile Include="UserInterface\Converters\BoolToVisibilityConverter.cs"/>
-        <Compile Include="UserInterface\Converters\InverseNullToVisibilityConverter.cs"/>
-        <Compile Include="UserInterface\Converters\NullToVisibilityConverter.cs"/>
+        <Compile Include="Models\AdHostStore.cs" />
+        <Compile Include="Models\Configs\Config.cs" />
+        <Compile Include="Models\Configs\ConfigStore.cs" />
+        <Compile Include="Models\Dictionaries\CambridgeEnglishChineseDictionary.cs" />
+        <Compile Include="Models\Dictionaries\Dictionary.cs" />
+        <Compile Include="Models\Dictionaries\DictionaryDotCom.cs" />
+        <Compile Include="Models\Dictionaries\DictionaryLookupResult.cs" />
+        <Compile Include="Models\Dictionaries\DictionaryStore.cs" />
+        <Compile Include="Models\Dictionaries\GoogleSearchDictionary.cs" />
+        <Compile Include="Models\Dictionaries\GoogleTranslateDictionary.cs" />
+        <Compile Include="Models\Dictionaries\MerriamWebsterMedicalDictionary.cs" />
+        <Compile Include="Models\Dictionaries\OxfordAdvancedLearnersDictionary.cs" />
+        <Compile Include="Models\Dictionaries\WikipediaDictionary.cs" />
+        <Compile Include="Models\NotifyPropertyChanged.cs" />
+        <Compile Include="Models\WordLists\WordListFile.cs" />
+        <Compile Include="Models\WordLists\WordEntry.cs" />
+        <Compile Include="Models\WordLists\WordList.cs" />
+        <Compile Include="Models\WordLists\WordListStore.cs" />
+        <Compile Include="Native\ClipboardMonitor.cs" />
+        <Compile Include="Native\KeyboardHook.cs" />
+        <Compile Include="Native\NativeMethods.cs" />
+        <Compile Include="Native\ScreenCapture.cs" />
+        <Compile Include="UserInterface\Controls\ControlUtils.cs" />
+        <Compile Include="UserInterface\Controls\DictionaryDragAndDropListBox.cs" />
+        <Compile Include="UserInterface\Controls\DragAndDropListBox.cs" />
+        <Compile Include="UserInterface\Controls\ScrollParentWhenAtMax.cs" />
+        <Compile Include="UserInterface\Converters\BoolInverseConverter.cs" />
+        <Compile Include="UserInterface\Converters\BoolToHVisibilityConverter.cs" />
+        <Compile Include="UserInterface\Converters\BoolToVisibilityConverter.cs" />
+        <Compile Include="UserInterface\Converters\InverseNullToVisibilityConverter.cs" />
+        <Compile Include="UserInterface\Converters\NullToVisibilityConverter.cs" />
         <Compile Include="UserInterface\MainWindow.xaml.cs">
             <DependentUpon>MainWindow.xaml</DependentUpon>
             <SubType>Code</SubType>
@@ -246,8 +254,8 @@
         <Compile Include="UserInterface\Ocr\ManualOcrOverlay.xaml.cs">
             <DependentUpon>ManualOcrOverlay.xaml</DependentUpon>
         </Compile>
-        <Compile Include="UserInterface\Validation\WordListNameValidationRule.cs"/>
-        <Compile Include="UserInterface\Validation\WordValidationRule.cs"/>
+        <Compile Include="UserInterface\Validation\WordListNameValidationRule.cs" />
+        <Compile Include="UserInterface\Validation\WordValidationRule.cs" />
         <Compile Include="UserInterface\WordLists\WordCard.xaml.cs">
             <DependentUpon>WordCard.xaml</DependentUpon>
         </Compile>
@@ -257,10 +265,10 @@
         <Compile Include="UserInterface\WordLists\WordListBrowser.xaml.cs">
             <DependentUpon>WordListBrowser.xaml</DependentUpon>
         </Compile>
-        <Compile Include="Utils\BitmapUtils.cs"/>
-        <Compile Include="Utils\MathUtils.cs"/>
-        <Compile Include="Utils\TaskUtils.cs"/>
-        <Compile Include="Utils\WebUtils.cs"/>
+        <Compile Include="Utils\BitmapUtils.cs" />
+        <Compile Include="Utils\MathUtils.cs" />
+        <Compile Include="Utils\TaskUtils.cs" />
+        <Compile Include="Utils\WebUtils.cs" />
         <Compile Include="App.xaml.cs">
             <DependentUpon>App.xaml</DependentUpon>
             <SubType>Code</SubType>
@@ -308,8 +316,8 @@
             <DependentUpon>Settings.settings</DependentUpon>
             <DesignTimeSharedInput>True</DesignTimeSharedInput>
         </Compile>
-        <None Include="QuickDictionary.nuspec"/>
-        <Resource Include="ic_launcher.ico"/>
+        <None Include="QuickDictionary.nuspec" />
+        <Resource Include="ic_launcher.ico" />
         <EmbeddedResource Include="Properties\Resources.resx">
             <Generator>ResXFileCodeGenerator</Generator>
             <LastGenOutput>Resources.Designer.cs</LastGenOutput>
@@ -317,14 +325,14 @@
         <Content Include="data\tessdata\eng.traineddata">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </Content>
-        <None Include="packages.config"/>
+        <None Include="packages.config" />
         <None Include="Properties\Settings.settings">
             <Generator>SettingsSingleFileGenerator</Generator>
             <LastGenOutput>Settings.Designer.cs</LastGenOutput>
         </None>
     </ItemGroup>
     <ItemGroup>
-        <None Include="App.config"/>
+        <None Include="App.config" />
     </ItemGroup>
     <ItemGroup>
         <BootstrapperPackage Include=".NETFramework,Version=v4.7.2">
@@ -344,27 +352,27 @@
             <Name>ImageComparison</Name>
         </ProjectReference>
     </ItemGroup>
-    <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets"/>
+    <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
     <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
         <PropertyGroup>
             <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them. For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
         </PropertyGroup>
-        <Error Condition="!Exists('..\packages\squirrel.windows.2.0.1\build\squirrel.windows.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\squirrel.windows.2.0.1\build\squirrel.windows.props'))"/>
-        <Error Condition="!Exists('..\packages\Tesseract.4.1.1\build\Tesseract.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Tesseract.4.1.1\build\Tesseract.targets'))"/>
-        <Error Condition="!Exists('..\packages\cef.redist.x64.98.1.21\build\cef.redist.x64.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\cef.redist.x64.98.1.21\build\cef.redist.x64.props'))"/>
-        <Error Condition="!Exists('..\packages\cef.redist.x86.98.1.21\build\cef.redist.x86.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\cef.redist.x86.98.1.21\build\cef.redist.x86.props'))"/>
-        <Error Condition="!Exists('..\packages\CefSharp.Common.98.1.210\build\CefSharp.Common.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\CefSharp.Common.98.1.210\build\CefSharp.Common.props'))"/>
-        <Error Condition="!Exists('..\packages\CefSharp.Common.98.1.210\build\CefSharp.Common.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\CefSharp.Common.98.1.210\build\CefSharp.Common.targets'))"/>
-        <Error Condition="!Exists('..\packages\MaterialDesignThemes.4.4.0-ci94\build\MaterialDesignThemes.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\MaterialDesignThemes.4.4.0-ci94\build\MaterialDesignThemes.targets'))"/>
+        <Error Condition="!Exists('..\packages\squirrel.windows.2.0.1\build\squirrel.windows.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\squirrel.windows.2.0.1\build\squirrel.windows.props'))" />
+        <Error Condition="!Exists('..\packages\Tesseract.4.1.1\build\Tesseract.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Tesseract.4.1.1\build\Tesseract.targets'))" />
+        <Error Condition="!Exists('..\packages\cef.redist.x64.98.1.21\build\cef.redist.x64.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\cef.redist.x64.98.1.21\build\cef.redist.x64.props'))" />
+        <Error Condition="!Exists('..\packages\cef.redist.x86.98.1.21\build\cef.redist.x86.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\cef.redist.x86.98.1.21\build\cef.redist.x86.props'))" />
+        <Error Condition="!Exists('..\packages\CefSharp.Common.98.1.210\build\CefSharp.Common.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\CefSharp.Common.98.1.210\build\CefSharp.Common.props'))" />
+        <Error Condition="!Exists('..\packages\CefSharp.Common.98.1.210\build\CefSharp.Common.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\CefSharp.Common.98.1.210\build\CefSharp.Common.targets'))" />
+        <Error Condition="!Exists('..\packages\MaterialDesignThemes.4.4.0-ci94\build\MaterialDesignThemes.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\MaterialDesignThemes.4.4.0-ci94\build\MaterialDesignThemes.targets'))" />
     </Target>
     <Target Name="AfterBuild" Condition=" '$(Configuration)' == 'Release'">
         <GetAssemblyIdentity AssemblyFiles="$(TargetPath)">
-            <Output TaskParameter="Assemblies" ItemName="myAssemblyInfo"/>
+            <Output TaskParameter="Assemblies" ItemName="myAssemblyInfo" />
         </GetAssemblyIdentity>
-        <Exec Command="nuget pack QuickDictionary.nuspec -Version %(myAssemblyInfo.Version) -Properties Configuration=Release -OutputDirectory $(OutDir) -BasePath $(OutDir)"/>
-        <Exec Command="..\packages\squirrel.windows.2.0.1\tools\squirrel --releasify $(OutDir)QuickDictionary.$([System.Version]::Parse(%(myAssemblyInfo.Version)).ToString(3)).nupkg"/>
+        <Exec Command="nuget pack QuickDictionary.nuspec -Version %(myAssemblyInfo.Version) -Properties Configuration=Release -OutputDirectory $(OutDir) -BasePath $(OutDir)" />
+        <Exec Command="..\packages\squirrel.windows.2.0.1\tools\squirrel --releasify $(OutDir)QuickDictionary.$([System.Version]::Parse(%(myAssemblyInfo.Version)).ToString(3)).nupkg" />
     </Target>
-    <Import Project="..\packages\Tesseract.4.1.1\build\Tesseract.targets" Condition="Exists('..\packages\Tesseract.4.1.1\build\Tesseract.targets')"/>
-    <Import Project="..\packages\CefSharp.Common.98.1.210\build\CefSharp.Common.targets" Condition="Exists('..\packages\CefSharp.Common.98.1.210\build\CefSharp.Common.targets')"/>
-    <Import Project="..\packages\MaterialDesignThemes.4.4.0-ci94\build\MaterialDesignThemes.targets" Condition="Exists('..\packages\MaterialDesignThemes.4.4.0-ci94\build\MaterialDesignThemes.targets')"/>
+    <Import Project="..\packages\Tesseract.4.1.1\build\Tesseract.targets" Condition="Exists('..\packages\Tesseract.4.1.1\build\Tesseract.targets')" />
+    <Import Project="..\packages\CefSharp.Common.98.1.210\build\CefSharp.Common.targets" Condition="Exists('..\packages\CefSharp.Common.98.1.210\build\CefSharp.Common.targets')" />
+    <Import Project="..\packages\MaterialDesignThemes.4.4.0-ci94\build\MaterialDesignThemes.targets" Condition="Exists('..\packages\MaterialDesignThemes.4.4.0-ci94\build\MaterialDesignThemes.targets')" />
 </Project>
