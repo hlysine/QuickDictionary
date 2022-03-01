@@ -844,7 +844,9 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
                 try
                 {
+                    // Append a < char before each line of description so it will be wrapped in note blocks
                     desc = await dict.GetDescriptionAsync(browser);
+                    desc = string.Join(Environment.NewLine, desc.Split(new[] {"\r\n", "\r", "\n"}, StringSplitOptions.None).Select(line => "< " + line));
                 }
                 catch (Exception ex)
                 {
