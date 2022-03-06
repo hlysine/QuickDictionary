@@ -224,6 +224,7 @@
         <Compile Include="Models\Dictionaries\OxfordAdvancedLearnersDictionary.cs" />
         <Compile Include="Models\Dictionaries\WikipediaDictionary.cs" />
         <Compile Include="Models\NotifyPropertyChanged.cs" />
+        <Compile Include="Models\Storage.cs" />
         <Compile Include="Models\WordLists\WordListFile.cs" />
         <Compile Include="Models\WordLists\WordEntry.cs" />
         <Compile Include="Models\WordLists\WordList.cs" />

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.IO;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
@@ -17,7 +16,7 @@ public static class WordListStore
         {
             if (string.IsNullOrWhiteSpace(ConfigStore.Instance.Config.WordListsPath))
             {
-                ConfigStore.Instance.Config.WordListsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "QuickDictionary\\Word Lists");
+                ConfigStore.Instance.Config.WordListsPath = Storage.ToAbsolutePath("Word Lists");
                 ConfigStore.Instance.SaveConfig();
             }
 

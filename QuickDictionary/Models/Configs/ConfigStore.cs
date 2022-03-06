@@ -8,17 +8,14 @@ namespace QuickDictionary.Models.Configs;
 
 public class ConfigStore : NotifyPropertyChanged
 {
-    public static readonly string PERSISTENT_PATH = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "QuickDictionary");
-
+    private static readonly string config_path = Storage.ToAbsolutePath("config.xml");
+    
     private static ConfigStore instance;
 
     private Config config = new();
 
     private ConfigStore()
     {
-        if (!Directory.Exists(PERSISTENT_PATH))
-            Directory.CreateDirectory(PERSISTENT_PATH);
-
         LoadConfig();
     }
 
@@ -32,7 +29,7 @@ public class ConfigStore : NotifyPropertyChanged
 
     public void SaveConfig()
     {
-        using var fs = new FileStream(Path.Combine(PERSISTENT_PATH, "config.xml"), FileMode.Create);
+        using var fs = new FileStream(config_path, FileMode.Create);
         var serializer = new XmlSerializer(typeof(Config));
         serializer.Serialize(fs, Config);
     }
@@ -50,11 +47,9 @@ public class ConfigStore : NotifyPropertyChanged
     {
         try
         {
-            string path = Path.Combine(PERSISTENT_PATH, "config.xml");
-
-            if (File.Exists(path))
+            if (File.Exists(config_path))
             {
-                using var fs = new FileStream(path, FileMode.Open);
+                using var fs = new FileStream(config_path, FileMode.Open);
                 var serializer = new XmlSerializer(typeof(Config));
                 Config = (Config)serializer.Deserialize(fs);
             }

@@ -9,18 +9,39 @@ namespace QuickDictionary.Models;
 
 public class AdHostStore
 {
+    private const string ad_hosts_link = @"https://raw.githubusercontent.com/anudeepND/blacklist/master/adservers.txt";
+
+    private static readonly string ad_hosts_path = Storage.ToAbsolutePath("ad_hosts.txt");
+
     private static AdHostStore instance;
 
     public string[] AdHosts { get; private set; } = Array.Empty<string>();
 
     public static AdHostStore Instance => instance ??= new AdHostStore();
 
-    public async Task DownloadHostListAsync()
+    public async Task LoadAdHostsAsync()
     {
-        var client = new WebClient();
-        Stream stream = await client.OpenReadTaskAsync("https://raw.githubusercontent.com/anudeepND/blacklist/master/adservers.txt");
-        var reader = new StreamReader(stream);
-        string content = await reader.ReadToEndAsync();
+        // only re-download ad hosts once per week
+        bool fileIsValid = false;
+        if (File.Exists(ad_hosts_path))
+            if (DateTime.UtcNow - File.GetLastWriteTimeUtc(ad_hosts_path) < TimeSpan.FromDays(1))
+                fileIsValid = true;
+
+        if (!fileIsValid)
+            await downloadAdHostsAsync();
+
+        readAdHosts();
+    }
+
+    private async Task downloadAdHostsAsync()
+    {
+        using var client = new WebClient();
+        await client.DownloadFileTaskAsync(ad_hosts_link, ad_hosts_path);
+    }
+
+    private void readAdHosts()
+    {
+        string content = File.ReadAllText(ad_hosts_path);
         MatchCollection matches = Regex.Matches(content, @"0\.0\.0\.0 (.+)");
         string[] hosts = new string[matches.Count];
 

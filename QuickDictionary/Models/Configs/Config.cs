@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
+﻿using System.Collections.Generic;
 
 namespace QuickDictionary.Models.Configs;
 
@@ -16,7 +14,7 @@ public class Config
 
     public string LastWordListName { get; set; }
 
-    public string WordListsPath { get; set; } = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "QuickDictionary\\Word Lists");
+    public string WordListsPath { get; set; } = Storage.ToAbsolutePath("Word Lists");
 
     public double CaptureBoxWidth { get; set; } = 200;
 

@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using CefSharp;
 using CefSharp.Wpf;
+using QuickDictionary.Models;
 using QuickDictionary.Models.WordLists;
 using Squirrel;
 
@@ -45,7 +46,7 @@ public partial class App : Application
 
         var settings = new CefSettings();
 
-        settings.CachePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "QuickDictionary\\cache");
+        settings.CachePath = Storage.ToAbsolutePath("cache");
         settings.PersistUserPreferences = true;
         settings.PersistSessionCookies = true;
         settings.UserAgent = "Mozilla/5.0 (Linux; Android 10) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.101 Mobile Safari/537.36";
@@ -93,7 +94,7 @@ public partial class App : Application
             message.AppendLine(exception.StackTrace);
             message.AppendLine();
             message.AppendLine();
-            File.AppendAllText(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "QuickDictionary\\log.txt"), message.ToString());
+            File.AppendAllText(Storage.ToAbsolutePath("log.txt"), message.ToString());
             if (exception.InnerException != null)
                 LogException(exception.InnerException, source + ".InnerException");
         }
