@@ -21,7 +21,7 @@ public class AdHostStore
 
     public async Task LoadAdHostsAsync()
     {
-        // only re-download ad hosts once per week
+        // only re-download ad hosts once per day
         bool fileIsValid = false;
         if (File.Exists(ad_hosts_path))
             if (DateTime.UtcNow - File.GetLastWriteTimeUtc(ad_hosts_path) < TimeSpan.FromDays(1))
