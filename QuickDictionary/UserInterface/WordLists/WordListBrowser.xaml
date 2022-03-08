@@ -7,6 +7,8 @@
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
     xmlns:wordLists="clr-namespace:QuickDictionary.UserInterface.WordLists"
     xmlns:validation="clr-namespace:QuickDictionary.UserInterface.Validation"
+    xmlns:componentModel="clr-namespace:System.ComponentModel;assembly=WindowsBase"
+    xmlns:wordListsModel="clr-namespace:QuickDictionary.Models.WordLists"
     mc:Ignorable="d"
     Name="wordListsWindow"
     Title="Word List Manager"
@@ -15,6 +17,30 @@
     Topmost="{Binding IsSelected, ElementName=checkTopmost}"
     DataContext="{Binding RelativeSource={RelativeSource Self}}"
     Closing="WordListsWindow_Closing">
+    <Window.Resources>
+        <CollectionViewSource x:Key="WordEntriesSource"
+                              Source="{Binding SelectedWordList.WordList.Entries}">
+            <CollectionViewSource.SortDescriptions>
+                <componentModel:SortDescription
+                    PropertyName="{Binding SelectedSortOption.PropertyName}" />
+            </CollectionViewSource.SortDescriptions>
+        </CollectionViewSource>
+        <Style TargetType="ItemsControl" x:Key="SortedWordEntries">
+            <Style.Triggers>
+                <DataTrigger
+                    Binding="{Binding SelectedSortOption.PropertyName, Converter={StaticResource NullableToBoolConverter}}"
+                    Value="True">
+                    <Setter Property="ItemsSource"
+                            Value="{Binding Source={StaticResource ResourceKey=WordEntriesSource}}" />
+                </DataTrigger>
+                <DataTrigger
+                    Binding="{Binding SelectedSortOption.PropertyName, Converter={StaticResource NullableToBoolConverter}}"
+                    Value="False">
+                    <Setter Property="ItemsSource" Value="{Binding SelectedWordList.WordList.Entries}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
     <Grid
         Name="root">
         <materialDesign:DialogHost
@@ -242,11 +268,12 @@
                     <ItemsControl
                         Grid.Row="1"
                         Name="listCards"
-                        ItemsSource="{Binding WordList.Entries}"
+                        Style="{StaticResource SortedWordEntries}"
                         VirtualizingPanel.ScrollUnit="Pixel">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
                                 <wordLists:WordCard
+                                    d:DataContext="{d:DesignInstance wordListsModel:WordEntry}"
                                     FlashcardFlipped="{Binding FlashcardFlipped, Mode=TwoWay}"
                                     FlashcardMode="{Binding DataContext.WordList.FlashcardMode, RelativeSource={RelativeSource FindAncestor, AncestorType=ItemsControl}}"
                                     WordEdited="WordCard_WordEdited"

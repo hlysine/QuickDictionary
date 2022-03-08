@@ -50,11 +50,14 @@
             <converters:BoolInverseConverter
                 x:Key="BoolInverseConverter" />
 
-            <converters:NullToVisibilityConverter
+            <converters:NullableToVisibilityConverter
                 x:Key="NullToVisibilityConverter" />
 
-            <converters:InverseNullToVisibilityConverter
+            <converters:InverseNullableToVisibilityConverter
                 x:Key="InverseNullToVisibilityConverter" />
+
+            <converters:NullableToBoolConverter
+                x:Key="NullableToBoolConverter" />
 
             <Storyboard
                 x:Key="ShakeStoryboard">

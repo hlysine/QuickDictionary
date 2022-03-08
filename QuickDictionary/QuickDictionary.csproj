@@ -240,8 +240,9 @@
         <Compile Include="UserInterface\Converters\BoolInverseConverter.cs" />
         <Compile Include="UserInterface\Converters\BoolToHVisibilityConverter.cs" />
         <Compile Include="UserInterface\Converters\BoolToVisibilityConverter.cs" />
-        <Compile Include="UserInterface\Converters\InverseNullToVisibilityConverter.cs" />
-        <Compile Include="UserInterface\Converters\NullToVisibilityConverter.cs" />
+        <Compile Include="UserInterface\Converters\InverseNullableToVisibilityConverter.cs" />
+        <Compile Include="UserInterface\Converters\NullableToBoolConverter.cs" />
+        <Compile Include="UserInterface\Converters\NullableToVisibilityConverter.cs" />
         <Compile Include="UserInterface\MainWindow.xaml.cs">
             <DependentUpon>MainWindow.xaml</DependentUpon>
             <SubType>Code</SubType>

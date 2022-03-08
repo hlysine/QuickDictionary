@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Globalization;
 using System.IO;
@@ -19,6 +20,9 @@ namespace QuickDictionary.UserInterface.WordLists;
 public partial class WordListBrowser : Window, INotifyPropertyChanged
 {
     private readonly MainWindow mainWindow;
+
+    private WordListSortOption selectedSortOption;
+    
     private bool editLists;
 
     private string renameListName;
@@ -35,6 +39,26 @@ public partial class WordListBrowser : Window, INotifyPropertyChanged
         listWordLists.ItemsSource = WordListStore.WordListFiles;
         checkTopmost.IsSelected = ConfigStore.Instance.Config.WordListManagerAlwaysOnTop;
         drawerHost.IsLeftDrawerOpen = true;
+        SortOptions = new ObservableCollection<WordListSortOption>
+        {
+            new(null, "No sorting"),
+            new(nameof(WordEntry.Word), "Word"),
+            new(nameof(WordEntry.Created), "Time created"),
+            new(nameof(WordEntry.LastModified), "Last modified"),
+            new(nameof(WordEntry.DictionaryName), "Dictionary")
+        };
+    }
+    
+    public ObservableCollection<WordListSortOption> SortOptions { get; }
+
+    public WordListSortOption SelectedSortOption
+    {
+        get => selectedSortOption;
+        set
+        {
+            selectedSortOption = value;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SelectedSortOption)));
+        }
     }
 
     public bool EditLists
@@ -185,5 +209,17 @@ public partial class WordListBrowser : Window, INotifyPropertyChanged
     {
         if ((sender as WordCard)?.DataContext is WordEntry entry)
             mainWindow.NavigateWord(entry);
+    }
+
+    public class WordListSortOption
+    {
+        public string PropertyName { get; }
+        public string DisplayName { get; }
+
+        public WordListSortOption(string propertyName, string displayName)
+        {
+            PropertyName = propertyName;
+            DisplayName = displayName;
+        }
     }
 }
