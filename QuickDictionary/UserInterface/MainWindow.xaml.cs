@@ -874,7 +874,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
     private void btnWordLists_Click(object sender, RoutedEventArgs e)
     {
-        if (wordListBrowser == null) wordListBrowser = new WordListBrowser(this);
+        wordListBrowser ??= new WordListBrowser(this);
 
         if (!Application.Current.Windows.OfType<WordListBrowser>().Contains(wordListBrowser))
             wordListBrowser = new WordListBrowser(this);

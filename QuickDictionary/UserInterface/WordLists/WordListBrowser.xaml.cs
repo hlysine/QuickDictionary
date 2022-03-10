@@ -3,6 +3,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -41,12 +42,14 @@ public partial class WordListBrowser : Window, INotifyPropertyChanged
         drawerHost.IsLeftDrawerOpen = true;
         SortOptions = new ObservableCollection<WordListSortOption>
         {
-            new(null, "No sorting"),
-            new(nameof(WordEntry.Word), "Word"),
             new(nameof(WordEntry.Created), "Time created"),
+            new(nameof(WordEntry.Word), "Word"),
             new(nameof(WordEntry.LastModified), "Last modified"),
             new(nameof(WordEntry.DictionaryName), "Dictionary")
         };
+        selectedSortOption = SortOptions.First();
+        wordEntriesSource.SortDescriptions.Clear();
+        wordEntriesSource.SortDescriptions.Add(new SortDescription(selectedSortOption.PropertyName, ListSortDirection.Ascending));
     }
     
     public ObservableCollection<WordListSortOption> SortOptions { get; }
@@ -209,6 +212,12 @@ public partial class WordListBrowser : Window, INotifyPropertyChanged
     {
         if ((sender as WordCard)?.DataContext is WordEntry entry)
             mainWindow.NavigateWord(entry);
+    }
+
+    private void comboSortOption_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        wordEntriesSource.SortDescriptions.Clear();
+        wordEntriesSource.SortDescriptions.Add(new SortDescription(selectedSortOption.PropertyName, ListSortDirection.Ascending));
     }
 
     public class WordListSortOption
