@@ -910,7 +910,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         }
 
         string listName = txtNewListName.Text;
-        string path = Storage.ToAbsolutePath($"{listName}.xml");
+        string path = Path.Combine(WordListStore.WordListFolderPath, $"{listName}.xml");
         var wordlistFile = new WordListFile(path, new WordList
             { Name = listName, Created = DateTime.Now });
         WordListStore.WordListFiles.Add(wordlistFile);
