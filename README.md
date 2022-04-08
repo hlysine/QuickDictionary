@@ -1,9 +1,9 @@
 # QuickDictionary
 
 [![CodeFactor](https://www.codefactor.io/repository/github/hlysine/quickdictionary/badge)](https://www.codefactor.io/repository/github/hlysine/quickdictionary)
-![Release build](https://github.com/Henry-YSLin/QuickDictionary/workflows/Release%20build/badge.svg)
-![CodeQL](https://github.com/Henry-YSLin/QuickDictionary/workflows/CodeQL/badge.svg)
-![Build](https://github.com/Henry-YSLin/QuickDictionary/workflows/Build/badge.svg)
+![Release build](https://github.com/hlysine/QuickDictionary/workflows/Release%20build/badge.svg)
+![CodeQL](https://github.com/hlysine/QuickDictionary/workflows/CodeQL/badge.svg)
+![Build](https://github.com/hlysine/QuickDictionary/workflows/Build/badge.svg)
 
 The laziest way to use dictionaries.
 
@@ -22,10 +22,10 @@ The laziest way to use dictionaries.
  - [Microsoft Visual C++ Redistributable for Visual Studio 2019 (x86)](https://aka.ms/vs/16/release/VC_redist.x86.exe)
  
 **QuickDictionary download**:
-| **[Windows x64](https://github.com/Henry-YSLin/QuickDictionary/releases/latest/download/Setup.exe)**|
+| **[Windows x64](https://github.com/hlysine/QuickDictionary/releases/latest/download/Setup.exe)**|
 |---------------|
 
-Alternatively, check out the [Releases](https://github.com/Henry-YSLin/QuickDictionary/releases) page for changelogs.
+Alternatively, check out the [Releases](https://github.com/hlysine/QuickDictionary/releases) page for changelogs.
 
 ## How to use
 
