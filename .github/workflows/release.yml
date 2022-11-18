@@ -14,7 +14,7 @@ jobs:
       name: Checkout Code
 
     - name: Add msbuild to PATH
-      uses: microsoft/setup-msbuild@v1.0.0
+      uses: microsoft/setup-msbuild@v1.1.3
       env:
         ACTIONS_ALLOW_UNSECURE_COMMANDS: true
 
