@@ -55,7 +55,7 @@ jobs:
     #    uses a compiled language
 
     - name: Add msbuild to PATH
-      uses: microsoft/setup-msbuild@v1.0.0
+      uses: microsoft/setup-msbuild@v1.3.1
       env:
         ACTIONS_ALLOW_UNSECURE_COMMANDS: true
 
